@@ -198,6 +198,25 @@ footer a{color:#1e4d2b;text-decoration:none}
       </div>
     </div>
 
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #e5e5e0">
+      <label class="checkbox">
+        <input type="checkbox" id="c-vorstand" onchange="toggleVorstand()">
+        <span><strong>Vereinsvorstand vor Ort?</strong> Der Vorstand kann hier die Aufnahme direkt bestätigen und unterschreiben — sonst füllt er es später analog aus.</span>
+      </label>
+      <div id="vorstand-fields" class="hidden">
+        <label>
+          <span class="lbl">Aufnahme zum (Datum)</span>
+          <input type="date" id="f-aufnahme">
+        </label>
+        <span class="lbl" style="display:block"><strong>3. Vereinsvorstand</strong> — Unterschrift</span>
+        <div class="sig-wrap">
+          <canvas class="sig-canvas" id="sig-3" width="600" height="180"></canvas>
+          <div class="sig-hint">Vorstand unterschreibt hier</div>
+          <button class="sig-clear" onclick="clearSig(3)">Löschen</button>
+        </div>
+      </div>
+    </div>
+
     <div class="nav-bar">
       <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Zurück</button>
       <button class="btn btn-primary" onclick="nextStep(4)">Vorschau &rarr;</button>
@@ -239,8 +258,11 @@ var STATE = {
   data: { name:'', str:'', plzort:'', gebdat:'', tel:'', mail:'' },
   consentPrivacy: false,
   photoConsent: null, // null | 'ja' | 'nein'
+  vorstandConfirmed: false, // Vorstand vor Ort?
+  aufnahmeDatum: '',
   sig1: null, // dataURL
   sig2: null,
+  sig3: null, // Vorstand
   pdfBytes: null // last generated
 };
 
@@ -297,6 +319,18 @@ function nextStep(from){
     } else {
       STATE.sig2 = null;
     }
+    STATE.vorstandConfirmed = document.getElementById('c-vorstand').checked;
+    if (STATE.vorstandConfirmed){
+      STATE.aufnahmeDatum = document.getElementById('f-aufnahme').value;
+      STATE.sig3 = getSigDataUrl(3);
+      if (!STATE.sig3){
+        alert('Vorstand-Unterschrift fehlt — oder den Haken bei „Vereinsvorstand vor Ort" entfernen.');
+        return;
+      }
+    } else {
+      STATE.sig3 = null;
+      STATE.aufnahmeDatum = '';
+    }
     renderPreview();
   }
   showStep(from + 1);
@@ -339,6 +373,19 @@ function setPhoto(v){
   document.querySelectorAll('.toggle-photo .opt').forEach(function(el){
     el.classList.toggle('selected', el.dataset.photo === v);
   });
+}
+
+// --- Vorstand-Toggle ---
+function toggleVorstand(){
+  var on = document.getElementById('c-vorstand').checked;
+  document.getElementById('vorstand-fields').classList.toggle('hidden', !on);
+  if (on){
+    var f = document.getElementById('f-aufnahme');
+    if (!f.value){
+      var d = new Date();
+      f.value = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    }
+  }
 }
 
 // --- Canvas-Unterschrift ---
@@ -439,6 +486,7 @@ function renderPreview(){
     (d.mail?'<dt>E-Mail</dt><dd>'+esc(d.mail)+'</dd>':'')+
     '<dt>Datenschutz</dt><dd>'+ (STATE.consentPrivacy?'eingewilligt':'nicht eingewilligt') +'</dd>'+
     '<dt>Foto-/Filmaufnahmen</dt><dd>'+(STATE.photoConsent==='ja'?'eingewilligt':'nicht eingewilligt')+'</dd>'+
+    '<dt>Vereinsvorstand</dt><dd>'+(STATE.vorstandConfirmed?'bestätigt am '+(fmtDate(STATE.aufnahmeDatum)||todayDE()):'nicht bestätigt — Vorstand füllt analog')+'</dd>'+
     '<dt>Ort, Datum</dt><dd>'+esc(ortDatum)+'</dd>'+
     '</dl>';
 }
@@ -474,7 +522,12 @@ var COORDS = {
   sig1:    { x: 320, y: 232, w: 200, h: 50 },
   // Unterschrift 2 (Foto/Film)
   ort2:    { x: 70, y: 118 },
-  sig2:    { x: 320, y: 106, w: 200, h: 50 }
+  sig2:    { x: 320, y: 106, w: 200, h: 50 },
+  // Vorstand: „Aufnahme zum [DATUM] durch den Verein bestätigt"
+  aufnahme:{ x: 190, y: 80 },
+  // Vorstand: Ort, Datum (unten links) + Unterschrift (unten rechts)
+  ort3:    { x: 70, y: 38 },
+  sig3:    { x: 320, y: 26, w: 200, h: 50 }
 };
 
 async function buildPDF(){
@@ -512,6 +565,14 @@ async function buildPDF(){
     put(ortDatum, COORDS.ort2);
     var img2 = await pdfDoc.embedPng(STATE.sig2);
     page.drawImage(img2, { x: COORDS.sig2.x, y: COORDS.sig2.y, width: COORDS.sig2.w, height: COORDS.sig2.h });
+  }
+
+  if (STATE.vorstandConfirmed && STATE.sig3){
+    var aufnDate = fmtDate(STATE.aufnahmeDatum) || todayDE();
+    put(aufnDate, COORDS.aufnahme);
+    put(ortAusPLZ(d.plzort) + ', ' + aufnDate, COORDS.ort3);
+    var img3 = await pdfDoc.embedPng(STATE.sig3);
+    page.drawImage(img3, { x: COORDS.sig3.x, y: COORDS.sig3.y, width: COORDS.sig3.w, height: COORDS.sig3.h });
   }
 
   var bytes = await pdfDoc.save();
@@ -609,6 +670,7 @@ async function generateAndMail(){
 document.addEventListener('DOMContentLoaded', function(){
   initSigCanvas(document.getElementById('sig-1'));
   initSigCanvas(document.getElementById('sig-2'));
+  initSigCanvas(document.getElementById('sig-3'));
 
   // Live-Reset von .error beim Tippen
   ['f-name','f-str','f-plzort','f-gebdat','f-mail'].forEach(function(id){
