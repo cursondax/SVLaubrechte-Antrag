@@ -66,6 +66,11 @@ footer{text-align:center;padding:20px 16px;font-size:.78rem;color:#888}
 footer a{color:#1e4d2b;text-decoration:none}
 .hidden{display:none!important}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+.pdf-preview{margin:14px 0;border:1px solid #d4d4cf;border-radius:8px;overflow:hidden;background:#fff}
+.pdf-preview .pdf-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f0f0eb;font-size:.82rem;color:#444;border-bottom:1px solid #d4d4cf}
+.pdf-preview .pdf-bar button{background:#1e4d2b;color:#fff;border:0;padding:6px 12px;border-radius:6px;font-size:.78rem;cursor:pointer}
+.pdf-preview iframe{display:block;width:100%;height:520px;border:0;background:#888}
+.pdf-preview .pdf-loading{padding:24px;text-align:center;color:#666;font-size:.9rem}
 #debugTuner{position:fixed;right:8px;top:8px;width:240px;max-height:90vh;overflow-y:auto;background:#222;color:#fff;padding:10px;border-radius:8px;font-size:.75rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 #debugTuner h3{margin:0 0 8px;font-size:.85rem;color:#a8d990}
 #debugTuner .row{display:flex;align-items:center;gap:4px;margin-bottom:4px;font-family:monospace;font-size:.7rem}
@@ -234,8 +239,16 @@ footer a{color:#1e4d2b;text-decoration:none}
   <!-- SCHRITT 5: Vorschau + Versand -->
   <section class="section hidden" id="sec-5">
     <h2>Vorschau &amp; Versand</h2>
-    <p class="helper">Bitte alle Angaben prüfen, bevor du den Antrag absendest.</p>
+    <p class="helper">Hier siehst du das fertige PDF — wenn alles passt, herunterladen oder per E-Mail senden.</p>
     <div class="preview-box" id="preview"></div>
+
+    <div class="pdf-preview">
+      <div class="pdf-bar">
+        <span><strong>📄 PDF-Vorschau</strong></span>
+        <button onclick="rebuildPreview()" id="btn-rebuild">⟲ Neu erzeugen</button>
+      </div>
+      <div id="pdf-preview-body" class="pdf-loading">PDF wird erzeugt…</div>
+    </div>
 
     <div id="result-area"></div>
 
@@ -342,6 +355,10 @@ function nextStep(from){
     renderPreview();
   }
   showStep(from + 1);
+  if (from === 4) {
+    // Live-Vorschau bauen sobald Schritt 5 sichtbar
+    setTimeout(rebuildPreview, 50);
+  }
 }
 
 function prevStep(from){ showStep(from - 1); }
@@ -528,17 +545,17 @@ var COORDS_DEFAULT = {
   gebdat:  { x: 220, y: 498 },
   tel:     { x: 220, y: 471 },
   mail:    { x: 220, y: 444 },
-  // Unterschrift 1 (Datenschutz)
-  ort1:    { x: 70, y: 238 },
-  sig1:    { x: 320, y: 215, w: 200, h: 45 },
+  // Unterschrift 1 (Datenschutz) — Sig-Box kleiner (h=28) damit Label nicht überdeckt wird
+  ort1:    { x: 70, y: 244 },
+  sig1:    { x: 320, y: 232, w: 200, h: 28 },
   // Unterschrift 2 (Foto/Film)
-  ort2:    { x: 70, y: 112 },
-  sig2:    { x: 320, y: 90, w: 200, h: 45 },
+  ort2:    { x: 70, y: 116 },
+  sig2:    { x: 320, y: 104, w: 200, h: 28 },
   // Vorstand: „Aufnahme zum [DATUM] durch den Verein bestätigt"
-  aufnahme:{ x: 190, y: 62 },
+  aufnahme:{ x: 190, y: 68 },
   // Vorstand: Ort, Datum (unten links) + Unterschrift (unten rechts)
-  ort3:    { x: 70, y: 32 },
-  sig3:    { x: 320, y: 12, w: 200, h: 45 }
+  ort3:    { x: 70, y: 36 },
+  sig3:    { x: 320, y: 24, w: 200, h: 28 }
 };
 var COORDS = (function(){
   try {
@@ -637,6 +654,28 @@ function bytesToBlob(bytes){
 function showResult(html, isError){
   var area = document.getElementById('result-area');
   area.innerHTML = '<div class="'+(isError?'error-banner':'success-banner')+'">'+html+'</div>';
+}
+
+// --- Live-Vorschau im Browser ---
+var _previewUrl = null;
+async function rebuildPreview(){
+  var body = document.getElementById('pdf-preview-body');
+  if (!body) return;
+  body.innerHTML = '<div class="pdf-loading">PDF wird erzeugt…</div>';
+  var btn = document.getElementById('btn-rebuild');
+  if (btn) btn.disabled = true;
+  try {
+    var bytes = await buildPDF();
+    if (_previewUrl){ URL.revokeObjectURL(_previewUrl); _previewUrl = null; }
+    var blob = bytesToBlob(bytes);
+    _previewUrl = URL.createObjectURL(blob);
+    body.innerHTML = '<iframe src="'+_previewUrl+'#zoom=page-fit&toolbar=0&navpanes=0" title="Beitrittserklärung Vorschau"></iframe>';
+  } catch (e){
+    console.error(e);
+    body.innerHTML = '<div class="pdf-loading" style="color:#c0392b">Fehler beim Erzeugen: '+esc(e.message)+'</div>';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function generateAndDownload(){
@@ -742,6 +781,8 @@ function renderTuner(){
 window.nudge = function(key, axis, delta){
   COORDS[key][axis] += delta;
   renderTuner();
+  // Bei aktiver Vorschau direkt neu bauen
+  if (STATE.step === 5) rebuildPreview();
 };
 window.saveTuner = function(){
   try {
