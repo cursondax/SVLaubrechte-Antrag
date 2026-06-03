@@ -66,6 +66,14 @@ footer{text-align:center;padding:20px 16px;font-size:.78rem;color:#888}
 footer a{color:#1e4d2b;text-decoration:none}
 .hidden{display:none!important}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+#debugTuner{position:fixed;right:8px;top:8px;width:240px;max-height:90vh;overflow-y:auto;background:#222;color:#fff;padding:10px;border-radius:8px;font-size:.75rem;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#debugTuner h3{margin:0 0 8px;font-size:.85rem;color:#a8d990}
+#debugTuner .row{display:flex;align-items:center;gap:4px;margin-bottom:4px;font-family:monospace;font-size:.7rem}
+#debugTuner .row strong{flex:1;color:#a8d990}
+#debugTuner button{background:#444;color:#fff;border:0;padding:3px 8px;cursor:pointer;border-radius:3px;font-size:.7rem;min-width:24px}
+#debugTuner button:hover{background:#5a8c3e}
+#debugTuner .actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+#debugTuner .actions button{padding:6px 10px;flex:1}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-color-scheme: dark){
   body{background:#1a1a1a;color:#e5e5e0}
@@ -509,8 +517,11 @@ function esc(s){
 
 // Koordinaten in PDF-Punkten (A4 = 595×842, Origin unten-links).
 // Diese Werte sind initial geschätzt; bei Bedarf nachjustieren.
-var COORDS = {
-  // Tabelle „Persönliche Daten" — Wert-Spalte (Zeilenabstand 27 pt, +27 vs erste Version)
+// Koordinaten in PDF-Punkten (A4 = 595×842, Origin unten-links).
+// Über localStorage 'svlb_coords' lassen sich Override-Werte ablegen.
+// Debug-Modus per URL-Parameter ?debug=1 — zeigt Anker als rote Kreuze.
+var COORDS_DEFAULT = {
+  // Tabelle „Persönliche Daten" — Wert-Spalte
   name:    { x: 220, y: 579 },
   str:     { x: 220, y: 552 },
   plzort:  { x: 220, y: 525 },
@@ -518,17 +529,36 @@ var COORDS = {
   tel:     { x: 220, y: 471 },
   mail:    { x: 220, y: 444 },
   // Unterschrift 1 (Datenschutz)
-  ort1:    { x: 70, y: 244 },
-  sig1:    { x: 320, y: 232, w: 200, h: 50 },
+  ort1:    { x: 70, y: 238 },
+  sig1:    { x: 320, y: 215, w: 200, h: 45 },
   // Unterschrift 2 (Foto/Film)
-  ort2:    { x: 70, y: 118 },
-  sig2:    { x: 320, y: 106, w: 200, h: 50 },
+  ort2:    { x: 70, y: 112 },
+  sig2:    { x: 320, y: 90, w: 200, h: 45 },
   // Vorstand: „Aufnahme zum [DATUM] durch den Verein bestätigt"
-  aufnahme:{ x: 190, y: 80 },
+  aufnahme:{ x: 190, y: 62 },
   // Vorstand: Ort, Datum (unten links) + Unterschrift (unten rechts)
-  ort3:    { x: 70, y: 38 },
-  sig3:    { x: 320, y: 26, w: 200, h: 50 }
+  ort3:    { x: 70, y: 32 },
+  sig3:    { x: 320, y: 12, w: 200, h: 45 }
 };
+var COORDS = (function(){
+  try {
+    var saved = localStorage.getItem('svlb_coords');
+    if (saved) {
+      var merged = JSON.parse(JSON.stringify(COORDS_DEFAULT));
+      var override = JSON.parse(saved);
+      Object.keys(override).forEach(function(k){
+        if (merged[k]) Object.assign(merged[k], override[k]);
+      });
+      return merged;
+    }
+  } catch(e){}
+  return COORDS_DEFAULT;
+})();
+
+function isDebug(){
+  try { return new URL(location.href).searchParams.get('debug') === '1'; }
+  catch(e){ return false; }
+}
 
 async function buildPDF(){
   var resp = await fetch('vendor/template.pdf');
@@ -543,34 +573,47 @@ async function buildPDF(){
   var d = STATE.data;
   var ortDatum = ortAusPLZ(d.plzort) + ', ' + todayDE();
 
-  function put(text, c){
+  var DEBUG = isDebug();
+  function put(text, c, key){
     page.drawText(text || '', { x: c.x, y: c.y, size: 11, font: font, color: PDFLib.rgb(0.05,0.05,0.05) });
+    if (DEBUG && key){
+      page.drawRectangle({ x: c.x-2, y: c.y-2, width: 4, height: 4, color: PDFLib.rgb(1,0,0) });
+      page.drawText(key+' y='+c.y, { x: c.x+2, y: c.y+10, size: 6, font: font, color: PDFLib.rgb(1,0,0) });
+    }
+  }
+  function rectDbg(c, key){
+    if (!DEBUG) return;
+    page.drawRectangle({ x: c.x, y: c.y, width: c.w, height: c.h, borderColor: PDFLib.rgb(1,0,0), borderWidth: 0.5 });
+    page.drawText(key+' y='+c.y, { x: c.x, y: c.y-8, size: 6, font: font, color: PDFLib.rgb(1,0,0) });
   }
 
-  put(d.name, COORDS.name);
-  put(d.str, COORDS.str);
-  put(d.plzort, COORDS.plzort);
-  put(fmtDate(d.gebdat), COORDS.gebdat);
-  put(d.tel, COORDS.tel);
-  put(d.mail, COORDS.mail);
+  put(d.name, COORDS.name, 'name');
+  put(d.str, COORDS.str, 'str');
+  put(d.plzort, COORDS.plzort, 'plzort');
+  put(fmtDate(d.gebdat), COORDS.gebdat, 'gebdat');
+  put(d.tel, COORDS.tel, 'tel');
+  put(d.mail, COORDS.mail, 'mail');
 
   // Ort/Datum + Unterschrift 1
-  put(ortDatum, COORDS.ort1);
+  put(ortDatum, COORDS.ort1, 'ort1');
+  rectDbg(COORDS.sig1, 'sig1');
   if (STATE.sig1){
     var img1 = await pdfDoc.embedPng(STATE.sig1);
     page.drawImage(img1, { x: COORDS.sig1.x, y: COORDS.sig1.y, width: COORDS.sig1.w, height: COORDS.sig1.h });
   }
 
   if (STATE.photoConsent === 'ja' && STATE.sig2){
-    put(ortDatum, COORDS.ort2);
+    put(ortDatum, COORDS.ort2, 'ort2');
+    rectDbg(COORDS.sig2, 'sig2');
     var img2 = await pdfDoc.embedPng(STATE.sig2);
     page.drawImage(img2, { x: COORDS.sig2.x, y: COORDS.sig2.y, width: COORDS.sig2.w, height: COORDS.sig2.h });
   }
 
   if (STATE.vorstandConfirmed && STATE.sig3){
     var aufnDate = fmtDate(STATE.aufnahmeDatum) || todayDE();
-    put(aufnDate, COORDS.aufnahme);
-    put(ortAusPLZ(d.plzort) + ', ' + aufnDate, COORDS.ort3);
+    put(aufnDate, COORDS.aufnahme, 'aufnahme');
+    put(ortAusPLZ(d.plzort) + ', ' + aufnDate, COORDS.ort3, 'ort3');
+    rectDbg(COORDS.sig3, 'sig3');
     var img3 = await pdfDoc.embedPng(STATE.sig3);
     page.drawImage(img3, { x: COORDS.sig3.x, y: COORDS.sig3.y, width: COORDS.sig3.w, height: COORDS.sig3.h });
   }
@@ -666,11 +709,69 @@ async function generateAndMail(){
   }
 }
 
+// --- Debug-Tuner ---
+function renderTuner(){
+  if (!isDebug()) return;
+  var existing = document.getElementById('debugTuner');
+  if (existing) existing.remove();
+  var box = document.createElement('div');
+  box.id = 'debugTuner';
+  var html = '<h3>📐 Koord-Tuner (y in pt)</h3>';
+  var keys = ['name','str','plzort','gebdat','tel','mail','ort1','sig1','ort2','sig2','aufnahme','ort3','sig3'];
+  keys.forEach(function(k){
+    var c = COORDS[k];
+    html += '<div class="row">'
+      + '<strong>'+k+'</strong>'
+      + '<span>x='+c.x+'</span>'
+      + '<button onclick="nudge(\''+k+'\',\'x\',-1)">◀</button>'
+      + '<button onclick="nudge(\''+k+'\',\'x\',1)">▶</button>'
+      + '<span>y='+c.y+'</span>'
+      + '<button onclick="nudge(\''+k+'\',\'y\',-1)">▼</button>'
+      + '<button onclick="nudge(\''+k+'\',\'y\',1)">▲</button>'
+      + '</div>';
+  });
+  html += '<div class="actions">'
+    + '<button onclick="saveTuner()">💾 Save</button>'
+    + '<button onclick="resetTuner()">⟲ Reset</button>'
+    + '<button onclick="exportTuner()">📋 Copy</button>'
+    + '</div>'
+    + '<div class="row" style="margin-top:8px;color:#aaa">▲/▼ = y; ◀/▶ = x. Save → localStorage. Copy → in Clipboard für mich.</div>';
+  box.innerHTML = html;
+  document.body.appendChild(box);
+}
+window.nudge = function(key, axis, delta){
+  COORDS[key][axis] += delta;
+  renderTuner();
+};
+window.saveTuner = function(){
+  try {
+    var override = {};
+    Object.keys(COORDS).forEach(function(k){
+      override[k] = { x: COORDS[k].x, y: COORDS[k].y };
+      if (COORDS[k].w) override[k].w = COORDS[k].w;
+      if (COORDS[k].h) override[k].h = COORDS[k].h;
+    });
+    localStorage.setItem('svlb_coords', JSON.stringify(override));
+    alert('Koordinaten gespeichert. Bleibt auch nach Reload.');
+  } catch(e){ alert('Fehler: '+e.message); }
+};
+window.resetTuner = function(){
+  localStorage.removeItem('svlb_coords');
+  location.reload();
+};
+window.exportTuner = function(){
+  var s = JSON.stringify(COORDS, null, 2);
+  navigator.clipboard.writeText(s).then(function(){
+    alert('In Zwischenablage kopiert — schick mir den Text per Chat/Mail.');
+  }).catch(function(){ prompt('Kopiere manuell:', s); });
+};
+
 // --- Init ---
 document.addEventListener('DOMContentLoaded', function(){
   initSigCanvas(document.getElementById('sig-1'));
   initSigCanvas(document.getElementById('sig-2'));
   initSigCanvas(document.getElementById('sig-3'));
+  renderTuner();
 
   // Live-Reset von .error beim Tippen
   ['f-name','f-str','f-plzort','f-gebdat','f-mail'].forEach(function(id){
