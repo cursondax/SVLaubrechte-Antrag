@@ -557,7 +557,9 @@ var COORDS_DEFAULT = {
   aufnahme:{ x: 165, y: 60 },
   // Vorstand: Ort, Datum (unten links) + Unterschrift (unten rechts)
   ort3:    { x: 70, y: 30 },
-  sig3:    { x: 320, y: 24, w: 200, h: 28 }
+  sig3:    { x: 320, y: 24, w: 200, h: 28 },
+  // Vereinslogo oben rechts (Querformat 3:2)
+  logo:    { x: 460, y: 770, w: 100, h: 67 }
 };
 var COORDS = (function(){
   try {
@@ -579,6 +581,17 @@ function isDebug(){
   catch(e){ return false; }
 }
 
+// Logo wird beim ersten Build geladen und gecached
+var _logoBytes = null;
+async function loadLogoBytes(){
+  if (_logoBytes) return _logoBytes;
+  try {
+    var r = await fetch('logo-vogel-pdf.png');
+    if (r.ok) _logoBytes = await r.arrayBuffer();
+  } catch(e){ console.warn('Logo konnte nicht geladen werden', e); }
+  return _logoBytes;
+}
+
 async function buildPDF(){
   var resp = await fetch('vendor/template.pdf');
   if (!resp.ok) throw new Error('Vorlage konnte nicht geladen werden.');
@@ -589,6 +602,18 @@ async function buildPDF(){
   var font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
   var page = pdfDoc.getPages()[0];
+
+  // Vereinslogo oben rechts (überlagert nichts vom Original-Text)
+  var logoBytes = await loadLogoBytes();
+  if (logoBytes){
+    try {
+      var logoImg = await pdfDoc.embedPng(logoBytes);
+      page.drawImage(logoImg, {
+        x: COORDS.logo.x, y: COORDS.logo.y,
+        width: COORDS.logo.w, height: COORDS.logo.h
+      });
+    } catch(e){ console.warn('Logo-Embed fehlgeschlagen', e); }
+  }
   var d = STATE.data;
   var ortDatum = ortAusPLZ(d.plzort) + ', ' + todayDE();
 
