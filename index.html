@@ -342,15 +342,12 @@ function setPhoto(v){
 }
 
 // --- Canvas-Unterschrift ---
+// Interne Buffergröße kommt aus den HTML-Attributen (600×180) — dadurch
+// bleibt die Auflösung im PDF gleich, egal wie die Canvas per CSS skaliert
+// wird, und die Init funktioniert auch wenn der Schritt noch hidden ist.
 function initSigCanvas(canvas){
   var ctx = canvas.getContext('2d');
-  var rect = canvas.getBoundingClientRect();
-  // Retina
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#1a1a1a';
@@ -361,7 +358,10 @@ function initSigCanvas(canvas){
   function pos(ev){
     var r = canvas.getBoundingClientRect();
     var t = ev.touches ? ev.touches[0] : ev;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
+    // CSS-Pixel → Canvas-Buffer-Pixel
+    var sx = r.width > 0 ? canvas.width / r.width : 1;
+    var sy = r.height > 0 ? canvas.height / r.height : 1;
+    return { x: (t.clientX - r.left) * sx, y: (t.clientY - r.top) * sy };
   }
   function start(ev){
     ev.preventDefault();
