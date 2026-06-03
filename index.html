@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e4d2b">
+<title>Beitrittserklärung — SV Lau-Brechte e.V.</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<script src="vendor/pdf-lib/pdf-lib.min.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;color:#222;background:#f5f5f3;line-height:1.5;overscroll-behavior-y:contain}
+header{background:#1e4d2b;color:#fff;padding:env(safe-area-inset-top) 16px 12px;text-align:center}
+header h1{margin:8px 0 2px;font-size:1.1rem;font-weight:600;letter-spacing:.3px}
+header .sub{font-size:.78rem;opacity:.85}
+main{max-width:680px;margin:0 auto;padding:0 16px 32px}
+.progress{display:flex;gap:6px;margin:16px 0 20px;padding:0}
+.progress .step{flex:1;height:6px;border-radius:3px;background:#d4d4cf;transition:background .25s}
+.progress .step.done{background:#5a8c3e}
+.progress .step.active{background:#1e4d2b}
+.section{background:#fff;border-radius:12px;padding:18px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+.section h2{margin:0 0 14px;font-size:1.15rem;color:#1e4d2b;font-weight:600}
+.section p{margin:8px 0;font-size:.92rem}
+.section .helper{font-size:.82rem;color:#666;margin-top:-4px;margin-bottom:14px}
+label{display:block;margin-bottom:12px;font-size:.88rem;font-weight:500;color:#444}
+label .lbl{display:block;margin-bottom:4px}
+label .req{color:#c0392b}
+input[type=text],input[type=email],input[type=tel],input[type=date]{width:100%;padding:12px 14px;border:1.5px solid #d4d4cf;border-radius:8px;font-size:1rem;font-family:inherit;background:#fff;transition:border-color .15s}
+input:focus{outline:none;border-color:#1e4d2b}
+input.error{border-color:#c0392b;background:#fff5f5}
+.err-msg{display:none;color:#c0392b;font-size:.8rem;margin-top:4px}
+input.error + .err-msg{display:block}
+.checkbox{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:8px;background:#f9f9f7;cursor:pointer;user-select:none;margin:12px 0}
+.checkbox input{width:22px;height:22px;flex-shrink:0;margin-top:1px;accent-color:#1e4d2b}
+.checkbox span{flex:1;font-size:.9rem;line-height:1.4}
+.legal{font-size:.82rem;color:#444;background:#f9f9f7;padding:14px;border-radius:8px;margin:12px 0;max-height:280px;overflow-y:auto;border:1px solid #e5e5e0}
+.legal h3{margin:0 0 8px;font-size:.95rem;color:#1e4d2b}
+.sig-wrap{position:relative;margin:12px 0}
+.sig-canvas{display:block;width:100%;height:180px;background:#fff;border:1.5px dashed #b8b8af;border-radius:8px;touch-action:none;cursor:crosshair}
+.sig-canvas.signed{border-style:solid;border-color:#5a8c3e;background:#fafdf7}
+.sig-clear{position:absolute;top:8px;right:8px;background:#fff;border:1px solid #d4d4cf;border-radius:6px;padding:6px 10px;font-size:.78rem;cursor:pointer;color:#666}
+.sig-clear:active{background:#f0f0eb}
+.sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#aaa;font-size:.85rem;pointer-events:none;font-style:italic}
+.sig-canvas.signed + .sig-hint{display:none}
+.nav-bar{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:14px 16px;border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .1s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#1e4d2b;color:#fff}
+.btn-primary:disabled{background:#a8b8ad;cursor:not-allowed}
+.btn-secondary{background:#fff;color:#1e4d2b;border:1.5px solid #1e4d2b}
+.btn-success{background:#5a8c3e;color:#fff}
+.preview-box{background:#f0f4ec;border:1px solid #c8d4bc;border-radius:8px;padding:14px;margin:12px 0;font-size:.88rem}
+.preview-box dt{font-weight:600;color:#1e4d2b;margin-top:6px}
+.preview-box dd{margin:0 0 4px 0}
+.actions-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
+@media(min-width:480px){.actions-grid{grid-template-columns:1fr 1fr}}
+.success-banner{background:#e8f5e0;border:1px solid #5a8c3e;color:#1e4d2b;padding:14px;border-radius:8px;margin:12px 0;text-align:center;font-weight:500}
+.error-banner{background:#fbe9e7;border:1px solid #c0392b;color:#c0392b;padding:14px;border-radius:8px;margin:12px 0;text-align:center;font-size:.9rem}
+.toggle-photo{margin:14px 0}
+.toggle-photo .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.toggle-photo .opt{padding:14px;border:1.5px solid #d4d4cf;border-radius:8px;text-align:center;font-size:.92rem;font-weight:500;cursor:pointer;background:#fff}
+.toggle-photo .opt.selected{background:#1e4d2b;color:#fff;border-color:#1e4d2b}
+footer{text-align:center;padding:20px 16px;font-size:.78rem;color:#888}
+footer a{color:#1e4d2b;text-decoration:none}
+.hidden{display:none!important}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-color-scheme: dark){
+  body{background:#1a1a1a;color:#e5e5e0}
+  .section{background:#262624;color:#e5e5e0}
+  .section h2{color:#a8d990}
+  label{color:#bbb}
+  input[type=text],input[type=email],input[type=tel],input[type=date]{background:#1a1a1a;color:#e5e5e0;border-color:#3a3a38}
+  .checkbox,.legal{background:#1a1a1a;color:#d0d0c8;border-color:#3a3a38}
+  .legal h3{color:#a8d990}
+  .sig-canvas{background:#fff}
+  .btn-secondary{background:#262624;color:#a8d990;border-color:#a8d990}
+  .preview-box{background:#1f2a1c;border-color:#3a4a30;color:#d0d0c8}
+  .preview-box dt{color:#a8d990}
+  .toggle-photo .opt{background:#262624;border-color:#3a3a38;color:#e5e5e0}
+  .toggle-photo .opt.selected{background:#5a8c3e;border-color:#5a8c3e}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Beitrittserklärung</h1>
+  <div class="sub">Schützenverein Lau-Brechte e.V., Ochtrup &middot; seit 1645</div>
+</header>
+
+<main>
+  <div class="progress" id="progress">
+    <span class="step active" data-step="1"></span>
+    <span class="step" data-step="2"></span>
+    <span class="step" data-step="3"></span>
+    <span class="step" data-step="4"></span>
+    <span class="step" data-step="5"></span>
+  </div>
+
+  <!-- SCHRITT 1: Persönliche Daten -->
+  <section class="section" id="sec-1">
+    <h2>Persönliche Daten</h2>
+    <p class="helper">Bitte fülle alle Felder aus.</p>
+
+    <label>
+      <span class="lbl">Name, Vorname <span class="req">*</span></span>
+      <input type="text" id="f-name" autocomplete="name" required>
+      <div class="err-msg">Bitte Name und Vorname angeben</div>
+    </label>
+    <label>
+      <span class="lbl">Straße, Nr. <span class="req">*</span></span>
+      <input type="text" id="f-str" autocomplete="street-address" required>
+      <div class="err-msg">Bitte Straße und Hausnummer angeben</div>
+    </label>
+    <label>
+      <span class="lbl">PLZ, Ort <span class="req">*</span></span>
+      <input type="text" id="f-plzort" autocomplete="postal-code" required placeholder="48607 Ochtrup">
+      <div class="err-msg">Bitte PLZ und Ort angeben</div>
+    </label>
+    <label>
+      <span class="lbl">Geburtsdatum <span class="req">*</span></span>
+      <input type="date" id="f-gebdat" autocomplete="bday" required>
+      <div class="err-msg">Bitte Geburtsdatum angeben</div>
+    </label>
+    <label>
+      <span class="lbl">Telefon</span>
+      <input type="tel" id="f-tel" autocomplete="tel" inputmode="tel">
+    </label>
+    <label>
+      <span class="lbl">E-Mail</span>
+      <input type="email" id="f-mail" autocomplete="email" inputmode="email">
+      <div class="err-msg">Bitte gültige E-Mail-Adresse</div>
+    </label>
+
+    <div class="nav-bar">
+      <button class="btn btn-primary" onclick="nextStep(1)">Weiter &rarr;</button>
+    </div>
+  </section>
+
+  <!-- SCHRITT 2: Datenschutz -->
+  <section class="section hidden" id="sec-2">
+    <h2>Datenschutzbestimmungen</h2>
+    <div class="legal">
+      <p>Ich willige ein, dass der oben genannte Verein als verantwortliche Stelle, die in der Beitrittserklärung erhobenen personenbezogenen Daten wie Name, Vorname, Geburtsdatum, Adresse, E-Mail-Adresse, Telefonnummer, Funktion im Verein und Bankverbindung ausschließlich zum Zwecke der Mitgliederverwaltung, des Beitragseinzuges und der Übermittlung von Vereinsinformationen durch den Verein verarbeitet und genutzt werden. Eine Übermittlung von Daten an externe Dritte (z.B. Postdienstleister) findet nur im Rahmen der in der Satzung festgelegte Zwecke statt. Diese Datenübermittlungen sind notwendig zum Zwecke der Organisation. Eine Datennutzung für Werbezwecke findet nicht statt. Bei Beendigung der Mitgliedschaft werden die personenbezogenen Daten gelöscht, soweit sie nicht entsprechend der gesetzlichen Vorgaben aufbewahrt werden müssen. Jedes Mitglied hat im Rahmen der Vorgaben des Bundesdatenschutzgesetzes/Datenschutzgrundverordnung das Recht auf Auskunft über die personenbezogenen Daten, die zu seiner Person bei der verantwortlichen Stelle gespeichert sind. Außerdem hat das Mitglied, im Falle von fehlerhaften Daten, ein Korrekturrecht.</p>
+    </div>
+    <label class="checkbox">
+      <input type="checkbox" id="c-datenschutz">
+      <span>Ich willige in die Verarbeitung meiner Daten gemäß obiger Datenschutzbestimmungen ein.</span>
+    </label>
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="prevStep(2)">&larr; Zurück</button>
+      <button class="btn btn-primary" onclick="nextStep(2)">Weiter &rarr;</button>
+    </div>
+  </section>
+
+  <!-- SCHRITT 3: Foto/Film (freiwillig) -->
+  <section class="section hidden" id="sec-3">
+    <h2>Foto- und Filmaufnahmen</h2>
+    <p class="helper">Diese Einwilligung ist freiwillig.</p>
+    <div class="legal">
+      <p>Ich willige ein, dass im Rahmen von Veranstaltungen angefertigte Foto- und Filmaufnahmen für Veröffentlichungen, Berichte, in Printmedien, Neuen Medien und auf der Internetseite des Vereines und seinen übergeordneten Verbänden unentgeltlich verwendet werden dürfen. Eine Verwendung der Aufnahmen für andere als die beschriebenen Zwecke oder ein Inverkehrbringen durch Überlassung der Aufnahmen an Dritte ist unzulässig. Diese Einwilligung ist freiwillig. Sie kann jederzeit mit Wirkung für die Zukunft widerrufen werden.</p>
+    </div>
+    <div class="toggle-photo">
+      <span class="lbl">Möchtest du dieser Einwilligung zustimmen?</span>
+      <div class="opts">
+        <div class="opt" data-photo="ja" onclick="setPhoto('ja')">Ja, ich willige ein</div>
+        <div class="opt" data-photo="nein" onclick="setPhoto('nein')">Nein</div>
+      </div>
+    </div>
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="prevStep(3)">&larr; Zurück</button>
+      <button class="btn btn-primary" onclick="nextStep(3)" id="btn-step3">Weiter &rarr;</button>
+    </div>
+  </section>
+
+  <!-- SCHRITT 4: Unterschrift(en) -->
+  <section class="section hidden" id="sec-4">
+    <h2>Unterschrift</h2>
+    <p class="helper">Mit dem Finger oder Stylus auf dem grauen Feld unterschreiben.</p>
+
+    <div>
+      <span class="lbl"><strong>1. Datenschutz</strong> — Unterschrift Mitglied / gesetzlicher Vertreter</span>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="sig-1" width="600" height="180"></canvas>
+        <div class="sig-hint">Hier unterschreiben</div>
+        <button class="sig-clear" onclick="clearSig(1)">Löschen</button>
+      </div>
+    </div>
+
+    <div id="sig-2-wrap" class="hidden">
+      <span class="lbl" style="margin-top:14px;display:block"><strong>2. Foto-/Filmaufnahmen</strong> — Unterschrift Mitglied / gesetzlicher Vertreter</span>
+      <div class="sig-wrap">
+        <canvas class="sig-canvas" id="sig-2" width="600" height="180"></canvas>
+        <div class="sig-hint">Hier unterschreiben</div>
+        <button class="sig-clear" onclick="clearSig(2)">Löschen</button>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="prevStep(4)">&larr; Zurück</button>
+      <button class="btn btn-primary" onclick="nextStep(4)">Vorschau &rarr;</button>
+    </div>
+  </section>
+
+  <!-- SCHRITT 5: Vorschau + Versand -->
+  <section class="section hidden" id="sec-5">
+    <h2>Vorschau &amp; Versand</h2>
+    <p class="helper">Bitte alle Angaben prüfen, bevor du den Antrag absendest.</p>
+    <div class="preview-box" id="preview"></div>
+
+    <div id="result-area"></div>
+
+    <div class="actions-grid">
+      <button class="btn btn-primary" id="btn-pdf" onclick="generateAndDownload()">PDF herunterladen</button>
+      <button class="btn btn-success" id="btn-mail" onclick="generateAndMail()">Per E-Mail senden</button>
+    </div>
+
+    <div class="nav-bar">
+      <button class="btn btn-secondary" onclick="prevStep(5)">&larr; Zurück</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Schützenverein Lau-Brechte e.V. &middot; Ochtrup<br>
+  <a href="mailto:info@schuetzenverein-lau-brechte.de">info@schuetzenverein-lau-brechte.de</a>
+</footer>
+
+<script>
+// ============================================================
+// SV Lau-Brechte — Online-Beitrittserklärung
+// Single-File-App, pdf-lib für PDF-Overlay
+// ============================================================
+
+var STATE = {
+  step: 1,
+  data: { name:'', str:'', plzort:'', gebdat:'', tel:'', mail:'' },
+  consentPrivacy: false,
+  photoConsent: null, // null | 'ja' | 'nein'
+  sig1: null, // dataURL
+  sig2: null,
+  pdfBytes: null // last generated
+};
+
+var EMPFAENGER = 'info@schuetzenverein-lau-brechte.de';
+
+// --- Wizard ---
+function showStep(n){
+  for (var i=1;i<=5;i++){
+    var s = document.getElementById('sec-'+i);
+    if (s) s.classList.toggle('hidden', i!==n);
+  }
+  document.querySelectorAll('.progress .step').forEach(function(el){
+    var st = parseInt(el.dataset.step,10);
+    el.classList.toggle('done', st < n);
+    el.classList.toggle('active', st === n);
+  });
+  STATE.step = n;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function nextStep(from){
+  if (from === 1){
+    if (!validateStep1()) return;
+    collectStep1();
+  }
+  if (from === 2){
+    var c = document.getElementById('c-datenschutz');
+    if (!c.checked){
+      alert('Die Datenschutz-Einwilligung ist Pflicht, sonst können wir deinen Antrag nicht bearbeiten.');
+      return;
+    }
+    STATE.consentPrivacy = true;
+  }
+  if (from === 3){
+    if (STATE.photoConsent === null){
+      alert('Bitte „Ja" oder „Nein" auswählen.');
+      return;
+    }
+    // Show or hide 2nd signature
+    document.getElementById('sig-2-wrap').classList.toggle('hidden', STATE.photoConsent !== 'ja');
+  }
+  if (from === 4){
+    STATE.sig1 = getSigDataUrl(1);
+    if (!STATE.sig1){
+      alert('Bitte die Unterschrift zur Datenschutz-Einwilligung leisten.');
+      return;
+    }
+    if (STATE.photoConsent === 'ja'){
+      STATE.sig2 = getSigDataUrl(2);
+      if (!STATE.sig2){
+        alert('Bitte die Unterschrift zur Foto-Einwilligung leisten — oder unter Schritt 3 „Nein" wählen.');
+        return;
+      }
+    } else {
+      STATE.sig2 = null;
+    }
+    renderPreview();
+  }
+  showStep(from + 1);
+}
+
+function prevStep(from){ showStep(from - 1); }
+
+// --- Validation Schritt 1 ---
+function validateStep1(){
+  var ok = true;
+  var fields = ['f-name','f-str','f-plzort','f-gebdat'];
+  fields.forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el.value.trim()){ el.classList.add('error'); ok = false; }
+    else el.classList.remove('error');
+  });
+  var mail = document.getElementById('f-mail');
+  if (mail.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.value)){
+    mail.classList.add('error'); ok = false;
+  } else mail.classList.remove('error');
+  if (!ok){
+    var first = document.querySelector('.error');
+    if (first) first.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+  return ok;
+}
+
+function collectStep1(){
+  STATE.data.name = document.getElementById('f-name').value.trim();
+  STATE.data.str = document.getElementById('f-str').value.trim();
+  STATE.data.plzort = document.getElementById('f-plzort').value.trim();
+  STATE.data.gebdat = document.getElementById('f-gebdat').value;
+  STATE.data.tel = document.getElementById('f-tel').value.trim();
+  STATE.data.mail = document.getElementById('f-mail').value.trim();
+}
+
+// --- Foto-Toggle ---
+function setPhoto(v){
+  STATE.photoConsent = v;
+  document.querySelectorAll('.toggle-photo .opt').forEach(function(el){
+    el.classList.toggle('selected', el.dataset.photo === v);
+  });
+}
+
+// --- Canvas-Unterschrift ---
+function initSigCanvas(canvas){
+  var ctx = canvas.getContext('2d');
+  var rect = canvas.getBoundingClientRect();
+  // Retina
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#1a1a1a';
+
+  var drawing = false;
+  var lastX = 0, lastY = 0;
+
+  function pos(ev){
+    var r = canvas.getBoundingClientRect();
+    var t = ev.touches ? ev.touches[0] : ev;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+  function start(ev){
+    ev.preventDefault();
+    drawing = true;
+    var p = pos(ev);
+    lastX = p.x; lastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    canvas.classList.add('signed');
+  }
+  function move(ev){
+    if (!drawing) return;
+    ev.preventDefault();
+    var p = pos(ev);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+  function end(ev){
+    if (!drawing) return;
+    ev.preventDefault();
+    drawing = false;
+  }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end, {passive:false});
+  canvas.addEventListener('touchcancel', end, {passive:false});
+}
+
+function clearSig(n){
+  var c = document.getElementById('sig-'+n);
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0,0,c.width, c.height);
+  c.classList.remove('signed');
+}
+
+function getSigDataUrl(n){
+  var c = document.getElementById('sig-'+n);
+  if (!c.classList.contains('signed')) return null;
+  return c.toDataURL('image/png');
+}
+
+// --- Vorschau ---
+function fmtDate(iso){
+  if (!iso) return '';
+  var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[3]+'.'+m[2]+'.'+m[1];
+  return iso;
+}
+
+function todayDE(){
+  // pdf-lib runs in browser; use a fixed-format date
+  var d = new Date();
+  var dd = ('0'+d.getDate()).slice(-2);
+  var mm = ('0'+(d.getMonth()+1)).slice(-2);
+  var yy = d.getFullYear();
+  return dd+'.'+mm+'.'+yy;
+}
+
+function renderPreview(){
+  var p = document.getElementById('preview');
+  var d = STATE.data;
+  var ortDatum = ortAusPLZ(d.plzort) + ', ' + todayDE();
+  p.innerHTML = '<dl>'+
+    '<dt>Name, Vorname</dt><dd>'+esc(d.name)+'</dd>'+
+    '<dt>Straße, Nr.</dt><dd>'+esc(d.str)+'</dd>'+
+    '<dt>PLZ, Ort</dt><dd>'+esc(d.plzort)+'</dd>'+
+    '<dt>Geburtsdatum</dt><dd>'+esc(fmtDate(d.gebdat))+'</dd>'+
+    (d.tel?'<dt>Telefon</dt><dd>'+esc(d.tel)+'</dd>':'')+
+    (d.mail?'<dt>E-Mail</dt><dd>'+esc(d.mail)+'</dd>':'')+
+    '<dt>Datenschutz</dt><dd>'+ (STATE.consentPrivacy?'eingewilligt':'nicht eingewilligt') +'</dd>'+
+    '<dt>Foto-/Filmaufnahmen</dt><dd>'+(STATE.photoConsent==='ja'?'eingewilligt':'nicht eingewilligt')+'</dd>'+
+    '<dt>Ort, Datum</dt><dd>'+esc(ortDatum)+'</dd>'+
+    '</dl>';
+}
+
+function ortAusPLZ(plzort){
+  // "48607 Ochtrup" → "Ochtrup"
+  var m = plzort.match(/\d{4,5}\s+(.+)$/);
+  return m ? m[1].trim() : (plzort || 'Ochtrup');
+}
+
+function esc(s){
+  return String(s||'').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// --- PDF-Generierung ---
+// Strategie: Original-PDF als Template laden, Text und Unterschriften overlayen.
+// pdf-lib stellt PDFDocument bereit als window.PDFLib
+
+// Koordinaten in PDF-Punkten (A4 = 595×842, Origin unten-links).
+// Diese Werte sind initial geschätzt; bei Bedarf nachjustieren.
+var COORDS = {
+  // Tabelle „Persönliche Daten" — Wert-Spalte
+  name:    { x: 220, y: 552 },
+  str:     { x: 220, y: 525 },
+  plzort:  { x: 220, y: 498 },
+  gebdat:  { x: 220, y: 471 },
+  tel:     { x: 220, y: 444 },
+  mail:    { x: 220, y: 417 },
+  // Unterschrift 1 (Datenschutz)
+  ort1:    { x: 70, y: 244 },
+  sig1:    { x: 320, y: 232, w: 200, h: 50 },
+  // Unterschrift 2 (Foto/Film)
+  ort2:    { x: 70, y: 118 },
+  sig2:    { x: 320, y: 106, w: 200, h: 50 }
+};
+
+async function buildPDF(){
+  var resp = await fetch('vendor/template.pdf');
+  if (!resp.ok) throw new Error('Vorlage konnte nicht geladen werden.');
+  var tplBytes = await resp.arrayBuffer();
+
+  var PDFLib = window.PDFLib;
+  var pdfDoc = await PDFLib.PDFDocument.load(tplBytes);
+  var font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+  var page = pdfDoc.getPages()[0];
+  var d = STATE.data;
+  var ortDatum = ortAusPLZ(d.plzort) + ', ' + todayDE();
+
+  function put(text, c){
+    page.drawText(text || '', { x: c.x, y: c.y, size: 11, font: font, color: PDFLib.rgb(0.05,0.05,0.05) });
+  }
+
+  put(d.name, COORDS.name);
+  put(d.str, COORDS.str);
+  put(d.plzort, COORDS.plzort);
+  put(fmtDate(d.gebdat), COORDS.gebdat);
+  put(d.tel, COORDS.tel);
+  put(d.mail, COORDS.mail);
+
+  // Ort/Datum + Unterschrift 1
+  put(ortDatum, COORDS.ort1);
+  if (STATE.sig1){
+    var img1 = await pdfDoc.embedPng(STATE.sig1);
+    page.drawImage(img1, { x: COORDS.sig1.x, y: COORDS.sig1.y, width: COORDS.sig1.w, height: COORDS.sig1.h });
+  }
+
+  if (STATE.photoConsent === 'ja' && STATE.sig2){
+    put(ortDatum, COORDS.ort2);
+    var img2 = await pdfDoc.embedPng(STATE.sig2);
+    page.drawImage(img2, { x: COORDS.sig2.x, y: COORDS.sig2.y, width: COORDS.sig2.w, height: COORDS.sig2.h });
+  }
+
+  var bytes = await pdfDoc.save();
+  STATE.pdfBytes = bytes;
+  return bytes;
+}
+
+function pdfFilename(){
+  var d = STATE.data;
+  var n = (d.name || 'Antrag').replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g,'').replace(/\s+/g,'_');
+  var ts = todayDE().replace(/\./g,'-');
+  return 'Beitrittserklaerung_' + n + '_' + ts + '.pdf';
+}
+
+function bytesToBlob(bytes){
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+function showResult(html, isError){
+  var area = document.getElementById('result-area');
+  area.innerHTML = '<div class="'+(isError?'error-banner':'success-banner')+'">'+html+'</div>';
+}
+
+async function generateAndDownload(){
+  var btn = document.getElementById('btn-pdf');
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Erzeuge PDF…';
+  try {
+    var bytes = await buildPDF();
+    var blob = bytesToBlob(bytes);
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFilename();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    showResult('✓ PDF heruntergeladen: <strong>'+esc(pdfFilename())+'</strong>');
+  } catch (e){
+    console.error(e);
+    showResult('Fehler beim Erzeugen: '+esc(e.message), true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+async function generateAndMail(){
+  var btn = document.getElementById('btn-mail');
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Vorbereite…';
+  try {
+    var bytes = await buildPDF();
+    // Speichere PDF zum Selbst-Anhängen
+    var blob = bytesToBlob(bytes);
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFilename();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // mailto öffnen (PDF muss vom Nutzer angehängt werden — mailto: kann technisch keine Anhänge transportieren)
+    var subject = 'Beitrittserklärung — ' + STATE.data.name;
+    var body = 'Hallo Vorstand SV Lau-Brechte e.V.,\n\n'
+      + 'anbei meine Beitrittserklärung als PDF.\n\n'
+      + 'Name: ' + STATE.data.name + '\n'
+      + 'Straße: ' + STATE.data.str + '\n'
+      + 'PLZ, Ort: ' + STATE.data.plzort + '\n'
+      + 'Geburtsdatum: ' + fmtDate(STATE.data.gebdat) + '\n'
+      + (STATE.data.tel ? 'Telefon: ' + STATE.data.tel + '\n' : '')
+      + (STATE.data.mail ? 'E-Mail: ' + STATE.data.mail + '\n' : '')
+      + '\nMit freundlichen Grüßen\n' + STATE.data.name;
+    var mailto = 'mailto:' + EMPFAENGER + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+    setTimeout(function(){
+      window.location.href = mailto;
+      showResult('✓ PDF heruntergeladen — bitte in deinem E-Mail-Programm als <strong>Anhang</strong> hinzufügen und an <strong>'+EMPFAENGER+'</strong> senden.');
+      URL.revokeObjectURL(url);
+    }, 600);
+  } catch (e){
+    console.error(e);
+    showResult('Fehler: '+esc(e.message), true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+}
+
+// --- Init ---
+document.addEventListener('DOMContentLoaded', function(){
+  initSigCanvas(document.getElementById('sig-1'));
+  initSigCanvas(document.getElementById('sig-2'));
+
+  // Live-Reset von .error beim Tippen
+  ['f-name','f-str','f-plzort','f-gebdat','f-mail'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function(){ el.classList.remove('error'); });
+  });
+
+  // Service Worker
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('SW reg failed', e); });
+  }
+});
+</script>
+</body>
+</html>
