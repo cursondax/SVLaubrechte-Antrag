@@ -254,9 +254,13 @@ footer a{color:#1e4d2b;text-decoration:none}
 
     <div id="result-area"></div>
 
+    <label class="checkbox" id="copy-wrap" style="margin-top:8px">
+      <input type="checkbox" id="c-copy">
+      <span>Eine Kopie an meine eigene E-Mail-Adresse mitsenden</span>
+    </label>
     <div class="actions-grid">
       <button class="btn btn-primary" id="btn-pdf" onclick="generateAndDownload()">PDF herunterladen</button>
-      <button class="btn btn-success" id="btn-mail" onclick="generateAndMail()">Per E-Mail senden</button>
+      <button class="btn btn-success" id="btn-mail" onclick="sendByApi()">📧 Antrag absenden</button>
     </div>
 
     <div class="nav-bar">
@@ -360,6 +364,9 @@ function nextStep(from){
   if (from === 4) {
     // Live-Vorschau bauen sobald Schritt 5 sichtbar
     setTimeout(rebuildPreview, 50);
+    // Kopie-Checkbox nur wenn E-Mail vorhanden
+    var copyWrap = document.getElementById('copy-wrap');
+    if (copyWrap) copyWrap.style.display = STATE.data.mail ? '' : 'none';
   }
 }
 
@@ -731,44 +738,57 @@ async function generateAndDownload(){
   }
 }
 
-async function generateAndMail(){
+// PDF-Bytes → base64 (chunked, damit auch große PDFs gehen)
+function bytesToBase64(bytes){
+  var u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  var bin = '';
+  var CHUNK = 0x8000;
+  for (var i=0; i<u8.length; i+=CHUNK){
+    bin += String.fromCharCode.apply(null, u8.subarray(i, i+CHUNK));
+  }
+  return btoa(bin);
+}
+
+async function sendByApi(){
   var btn = document.getElementById('btn-mail');
   var orig = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Vorbereite…';
+  btn.innerHTML = '<span class="spinner"></span>Sende…';
   try {
     var bytes = await buildPDF();
-    // Speichere PDF zum Selbst-Anhängen
-    var blob = bytesToBlob(bytes);
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = pdfFilename();
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    var pdfBase64 = bytesToBase64(bytes);
+    var copy = document.getElementById('c-copy').checked;
 
-    // mailto öffnen (PDF muss vom Nutzer angehängt werden — mailto: kann technisch keine Anhänge transportieren)
-    var subject = 'Beitrittserklärung — ' + STATE.data.name;
-    var body = 'Hallo Vorstand SV Lau-Brechte e.V.,\n\n'
-      + 'anbei meine Beitrittserklärung als PDF.\n\n'
-      + 'Name: ' + STATE.data.name + '\n'
-      + 'Straße: ' + STATE.data.str + '\n'
-      + 'PLZ, Ort: ' + STATE.data.plzort + '\n'
-      + 'Geburtsdatum: ' + fmtDate(STATE.data.gebdat) + '\n'
-      + (STATE.data.tel ? 'Telefon: ' + STATE.data.tel + '\n' : '')
-      + (STATE.data.mail ? 'E-Mail: ' + STATE.data.mail + '\n' : '')
-      + '\nMit freundlichen Grüßen\n' + STATE.data.name;
-    var mailto = 'mailto:' + EMPFAENGER + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    var payload = {
+      pdfBase64: pdfBase64,
+      name: STATE.data.name,
+      str: STATE.data.str,
+      plzort: STATE.data.plzort,
+      gebdat: fmtDate(STATE.data.gebdat),
+      tel: STATE.data.tel,
+      mail: STATE.data.mail,
+      copyToApplicant: copy
+    };
 
-    setTimeout(function(){
-      window.location.href = mailto;
-      showResult('✓ PDF heruntergeladen — bitte in deinem E-Mail-Programm als <strong>Anhang</strong> hinzufügen und an <strong>'+EMPFAENGER+'</strong> senden.');
-      URL.revokeObjectURL(url);
-    }, 600);
+    var res = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    var data = await res.json().catch(function(){ return {}; });
+
+    if (!res.ok) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+
+    var copyHint = copy && STATE.data.mail
+      ? '<br>Eine Kopie geht zusätzlich an <strong>'+esc(STATE.data.mail)+'</strong>.'
+      : '';
+    showResult('✅ <strong>Antrag erfolgreich versendet</strong> an den Vorstand ('+EMPFAENGER+').'+copyHint+'<br>Wir melden uns bei dir.');
   } catch (e){
     console.error(e);
-    showResult('Fehler: '+esc(e.message), true);
+    // Fallback-Hinweis: Download anbieten falls API fehlschlägt
+    showResult('Versand fehlgeschlagen: '+esc(e.message)+'<br>Bitte lade das PDF herunter und schicke es manuell an '+EMPFAENGER+'.', true);
   } finally {
     btn.disabled = false;
     btn.innerHTML = orig;

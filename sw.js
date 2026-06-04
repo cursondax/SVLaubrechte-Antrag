@@ -1,6 +1,6 @@
 // SV Lau-Brechte – Beitrittserklärung Service Worker
 // CACHE_VERSION bei jedem Release erhöhen, damit Clients neu laden.
-const CACHE_VERSION = 'svlb-antrag-v3';
+const CACHE_VERSION = 'svlb-antrag-v4';
 const PRECACHE = [
   './',
   './index.html',

@@ -1,0 +1,10 @@
+{
+  "name": "svlaubrechte-antrag",
+  "version": "1.0.0",
+  "description": "Online-Beitrittserklärung für den Schützenverein Lau-Brechte e.V., Ochtrup",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "resend": "^4.0.0"
+  }
+}
