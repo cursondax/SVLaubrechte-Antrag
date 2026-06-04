@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 
 const VEREIN_MAIL = 'info@schuetzenverein-lau-brechte.de';
 // Verifizierte Vereins-Domain bei Resend (DKIM/SPF gesetzt am 04.06.2026)
-const FROM = 'SV Lau-Brechte Beitrittserklärung <antrag@send.schuetzenverein-lau-brechte.de>';
+const FROM = 'SV Lau-Brechte Beitrittserklärung <antrag@schuetzenverein-lau-brechte.de>';
 
 export default async function handler(req, res) {
   // CORS für PWA-Aufrufe
