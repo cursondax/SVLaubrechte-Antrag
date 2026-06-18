@@ -81,6 +81,10 @@ footer a{color:#1e4d2b;text-decoration:none}
 #debugTuner .actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
 #debugTuner .actions button{padding:6px 10px;flex:1}
 @keyframes spin{to{transform:rotate(360deg)}}
+.inviter-banner{background:#e8f5e0;border:1px solid #5a8c3e;color:#1e4d2b;padding:10px 14px;border-radius:8px;margin:14px 0 0;font-size:.88rem;text-align:center}
+.inviter-banner strong{color:#1e4d2b}
+.gen-url{width:100%;padding:10px 12px;border:1.5px solid #d4d4cf;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;background:#f9f9f7;color:#222;word-break:break-all}
+.gen-status{font-size:.85rem;color:#5a8c3e;font-weight:600;text-align:center;margin-top:10px;min-height:1.2em}
 @media (prefers-color-scheme: dark){
   body{background:#1a1a1a;color:#e5e5e0}
   .section{background:#262624;color:#e5e5e0}
@@ -106,6 +110,9 @@ footer a{color:#1e4d2b;text-decoration:none}
 </header>
 
 <main>
+  <div class="inviter-banner hidden" id="inviter-banner">
+    Eingeladen von <strong id="inviter-name"></strong> — willkommen bei den Lau-Brechte-Schützen!
+  </div>
   <div class="progress" id="progress">
     <span class="step active" data-step="1"></span>
     <span class="step" data-step="2"></span>
@@ -265,6 +272,40 @@ footer a{color:#1e4d2b;text-decoration:none}
 
     <div class="nav-bar">
       <button class="btn btn-secondary" onclick="prevStep(5)">&larr; Zurück</button>
+    </div>
+  </section>
+
+  <!-- GENERATOR: Einladungs-Link für Interessenten erstellen (nur via ?gen=1) -->
+  <section class="section hidden" id="sec-gen">
+    <h2>Einladungs-Link erstellen</h2>
+    <p class="helper">Erzeuge einen personalisierten Antragslink für einen Interessenten und verschicke ihn per WhatsApp oder E-Mail.</p>
+    <label>
+      <span class="lbl">Vorname des Interessenten</span>
+      <input type="text" id="g-vor" placeholder="z.B. Max" autocomplete="off">
+    </label>
+    <label>
+      <span class="lbl">Nachname</span>
+      <input type="text" id="g-nach" placeholder="z.B. Mustermann" autocomplete="off">
+    </label>
+    <label>
+      <span class="lbl">Dein Name <span class="req">*</span></span>
+      <input type="text" id="g-einl" placeholder="z.B. Bert Steven" autocomplete="name">
+      <div class="helper" style="margin-top:4px">Erscheint im Banner als „Eingeladen von …".</div>
+    </label>
+    <div class="nav-bar">
+      <button class="btn btn-primary" onclick="generateInvite()">Link erstellen</button>
+    </div>
+    <div id="gen-result" class="hidden" style="margin-top:18px">
+      <label>
+        <span class="lbl">Personalisierter Link</span>
+        <input type="text" id="g-url" readonly class="gen-url">
+      </label>
+      <div class="actions-grid">
+        <button class="btn btn-secondary" onclick="copyInviteUrl()">📋 Link kopieren</button>
+        <button class="btn btn-success" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        <button class="btn btn-primary" onclick="shareMail()">📧 E-Mail</button>
+      </div>
+      <div class="gen-status" id="g-status"></div>
     </div>
   </section>
 </main>
@@ -854,12 +895,101 @@ window.exportTuner = function(){
   }).catch(function(){ prompt('Kopiere manuell:', s); });
 };
 
+// --- Einladungs-Link: Query-Params + Generator ---
+function applyInviteParams(){
+  var p = new URLSearchParams(window.location.search);
+  var vor = (p.get('vorname') || '').trim();
+  var nach = (p.get('nachname') || '').trim();
+  var einl = (p.get('einlader') || '').trim();
+
+  // Pre-Fill „Name, Vorname" wenn übergeben
+  if (vor || nach){
+    var combined = nach && vor ? (nach + ', ' + vor) : (nach || vor);
+    var fName = document.getElementById('f-name');
+    if (fName && !fName.value) fName.value = combined;
+  }
+
+  // Einlader-Banner
+  if (einl){
+    var b = document.getElementById('inviter-banner');
+    var n = document.getElementById('inviter-name');
+    if (b && n){ n.textContent = einl; b.classList.remove('hidden'); }
+  }
+
+  // Generator-Modus per ?gen=1 — Wizard ausblenden, Generator zeigen
+  if (p.get('gen') === '1'){
+    document.getElementById('progress').classList.add('hidden');
+    for (var i=1;i<=5;i++){
+      var s = document.getElementById('sec-'+i);
+      if (s) s.classList.add('hidden');
+    }
+    document.getElementById('sec-gen').classList.remove('hidden');
+    // Vorname Einlader aus localStorage vorbelegen
+    try {
+      var saved = localStorage.getItem('svlb_inviter');
+      if (saved) document.getElementById('g-einl').value = saved;
+    } catch(e){}
+  }
+}
+
+function generateInvite(){
+  var vor = document.getElementById('g-vor').value.trim();
+  var nach = document.getElementById('g-nach').value.trim();
+  var einl = document.getElementById('g-einl').value.trim();
+  if (!einl){ alert('Bitte deinen Namen als Einlader angeben.'); return; }
+  if (!vor && !nach){ alert('Bitte mindestens Vor- oder Nachname des Interessenten angeben.'); return; }
+  var url = new URL(window.location.origin + window.location.pathname);
+  if (vor) url.searchParams.set('vorname', vor);
+  if (nach) url.searchParams.set('nachname', nach);
+  url.searchParams.set('einlader', einl);
+  document.getElementById('g-url').value = url.toString();
+  document.getElementById('gen-result').classList.remove('hidden');
+  document.getElementById('g-status').textContent = '';
+  try { localStorage.setItem('svlb_inviter', einl); } catch(e){}
+}
+
+function copyInviteUrl(){
+  var input = document.getElementById('g-url');
+  var url = input.value;
+  if (!url) return;
+  var done = function(){ document.getElementById('g-status').textContent = '✓ Link kopiert'; };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(function(){
+      input.select(); document.execCommand('copy'); done();
+    });
+  } else {
+    input.select(); document.execCommand('copy'); done();
+  }
+}
+
+function inviteGreeting(){
+  var vor = document.getElementById('g-vor').value.trim();
+  return vor ? ('Hallo ' + vor) : 'Hallo';
+}
+
+function shareWhatsApp(){
+  var url = document.getElementById('g-url').value;
+  if (!url) return;
+  var msg = inviteGreeting() + ',\n\nschön, dass du dich für eine Mitgliedschaft beim Schützenverein Lau-Brechte e.V. interessierst! Hier ist dein persönlicher Online-Antrag — direkt am Handy ausfüllen und unterschreiben:\n\n' + url + '\n\nSchützengrüße';
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function shareMail(){
+  var url = document.getElementById('g-url').value;
+  if (!url) return;
+  var subject = 'Dein Antragslink — Schützenverein Lau-Brechte e.V.';
+  var body = inviteGreeting() + ',\n\nschön, dass du dich für eine Mitgliedschaft beim Schützenverein Lau-Brechte e.V. interessierst!\n\nHier ist dein persönlicher Online-Antrag, den du direkt am Handy ausfüllen und unterschreiben kannst:\n\n' + url + '\n\nSchützengrüße';
+  window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
 // --- Init ---
 document.addEventListener('DOMContentLoaded', function(){
   initSigCanvas(document.getElementById('sig-1'));
   initSigCanvas(document.getElementById('sig-2'));
   initSigCanvas(document.getElementById('sig-3'));
   renderTuner();
+
+  applyInviteParams();
 
   // Live-Reset von .error beim Tippen
   ['f-name','f-str','f-plzort','f-gebdat','f-mail'].forEach(function(id){
