@@ -45,6 +45,12 @@ input.error + .err-msg{display:block}
 .sig-clear:active{background:#f0f0eb}
 .sig-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#aaa;font-size:.85rem;pointer-events:none;font-style:italic}
 .sig-canvas.signed + .sig-hint{display:none}
+.vorstand-prefilled{display:flex;gap:14px;align-items:center;margin-top:10px;padding:12px 14px;background:#f0f6ed;border:1.5px solid #c8dcb8;border-radius:8px}
+.vorstand-sig-img{width:140px;height:auto;max-height:60px;background:#fff;border-radius:6px;padding:4px 8px;flex-shrink:0;object-fit:contain}
+.vorstand-meta{flex:1;min-width:0;font-size:.88rem;line-height:1.4}
+.vorstand-name{font-weight:600;color:#1e4d2b}
+.vorstand-rolle{color:#5a6b54;font-size:.82rem;margin-top:1px}
+.vorstand-hint{color:#666;font-size:.78rem;margin-top:6px;font-style:italic}
 .nav-bar{display:flex;gap:10px;margin-top:18px}
 .btn{flex:1;padding:14px 16px;border:none;border-radius:10px;font-size:1rem;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .1s,background .15s}
 .btn:active{transform:scale(.97)}
@@ -221,20 +227,13 @@ footer a{color:#1e4d2b;text-decoration:none}
     </div>
 
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid #e5e5e0">
-      <label class="checkbox">
-        <input type="checkbox" id="c-vorstand" onchange="toggleVorstand()">
-        <span><strong>Vereinsvorstand vor Ort?</strong> Der Vorstand kann hier die Aufnahme direkt bestätigen und unterschreiben — sonst füllt er es später analog aus.</span>
-      </label>
-      <div id="vorstand-fields" class="hidden">
-        <label>
-          <span class="lbl">Aufnahme zum (Datum)</span>
-          <input type="date" id="f-aufnahme">
-        </label>
-        <span class="lbl" style="display:block"><strong>3. Vereinsvorstand</strong> — Unterschrift</span>
-        <div class="sig-wrap">
-          <canvas class="sig-canvas" id="sig-3" width="600" height="180"></canvas>
-          <div class="sig-hint">Vorstand unterschreibt hier</div>
-          <button class="sig-clear" onclick="clearSig(3)">Löschen</button>
+      <span class="lbl" style="display:block"><strong>3. Vereinsvorstand</strong> — bereits unterzeichnet</span>
+      <div class="vorstand-prefilled">
+        <img src="vorstand-signatur.png" alt="Unterschrift Bert Steven, Schriftführer" class="vorstand-sig-img">
+        <div class="vorstand-meta">
+          <div class="vorstand-name">Bert Steven</div>
+          <div class="vorstand-rolle">Schriftführer · Schützenverein Lau-Brechte e.V.</div>
+          <div class="vorstand-hint">Diesen Antrag hat der Vorstand für dich vorbereitet — du musst nichts weiter tun.</div>
         </div>
       </div>
     </div>
@@ -326,11 +325,8 @@ var STATE = {
   data: { name:'', str:'', plzort:'', gebdat:'', tel:'', mail:'' },
   consentPrivacy: false,
   photoConsent: null, // null | 'ja' | 'nein'
-  vorstandConfirmed: false, // Vorstand vor Ort?
-  aufnahmeDatum: '',
   sig1: null, // dataURL
   sig2: null,
-  sig3: null, // Vorstand
   pdfBytes: null // last generated
 };
 
@@ -387,18 +383,6 @@ function nextStep(from){
     } else {
       STATE.sig2 = null;
     }
-    STATE.vorstandConfirmed = document.getElementById('c-vorstand').checked;
-    if (STATE.vorstandConfirmed){
-      STATE.aufnahmeDatum = document.getElementById('f-aufnahme').value;
-      STATE.sig3 = getSigDataUrl(3);
-      if (!STATE.sig3){
-        alert('Vorstand-Unterschrift fehlt — oder den Haken bei „Vereinsvorstand vor Ort" entfernen.');
-        return;
-      }
-    } else {
-      STATE.sig3 = null;
-      STATE.aufnahmeDatum = '';
-    }
     renderPreview();
   }
   showStep(from + 1);
@@ -448,19 +432,6 @@ function setPhoto(v){
   document.querySelectorAll('.toggle-photo .opt').forEach(function(el){
     el.classList.toggle('selected', el.dataset.photo === v);
   });
-}
-
-// --- Vorstand-Toggle ---
-function toggleVorstand(){
-  var on = document.getElementById('c-vorstand').checked;
-  document.getElementById('vorstand-fields').classList.toggle('hidden', !on);
-  if (on){
-    var f = document.getElementById('f-aufnahme');
-    if (!f.value){
-      var d = new Date();
-      f.value = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
-    }
-  }
 }
 
 // --- Canvas-Unterschrift ---
@@ -561,7 +532,7 @@ function renderPreview(){
     (d.mail?'<dt>E-Mail</dt><dd>'+esc(d.mail)+'</dd>':'')+
     '<dt>Datenschutz</dt><dd>'+ (STATE.consentPrivacy?'eingewilligt':'nicht eingewilligt') +'</dd>'+
     '<dt>Foto-/Filmaufnahmen</dt><dd>'+(STATE.photoConsent==='ja'?'eingewilligt':'nicht eingewilligt')+'</dd>'+
-    '<dt>Vereinsvorstand</dt><dd>'+(STATE.vorstandConfirmed?'bestätigt am '+(fmtDate(STATE.aufnahmeDatum)||todayDE()):'nicht bestätigt — Vorstand füllt analog')+'</dd>'+
+    '<dt>Vereinsvorstand</dt><dd>vorab unterzeichnet von Bert Steven (Schriftführer) — Aufnahme zum '+esc(todayDE())+'</dd>'+
     '<dt>Ort, Datum</dt><dd>'+esc(ortDatum)+'</dd>'+
     '</dl>';
 }
@@ -640,6 +611,17 @@ async function loadLogoBytes(){
   return _logoBytes;
 }
 
+// Vorstands-Signatur (vorab hinterlegt) — fest im Repo, kein Canvas
+var _vorstandSigBytes = null;
+async function loadVorstandSigBytes(){
+  if (_vorstandSigBytes) return _vorstandSigBytes;
+  try {
+    var r = await fetch('vorstand-signatur.png');
+    if (r.ok) _vorstandSigBytes = await r.arrayBuffer();
+  } catch(e){ console.warn('Vorstands-Signatur konnte nicht geladen werden', e); }
+  return _vorstandSigBytes;
+}
+
 async function buildPDF(){
   var resp = await fetch('vendor/template.pdf');
   if (!resp.ok) throw new Error('Vorlage konnte nicht geladen werden.');
@@ -701,13 +683,18 @@ async function buildPDF(){
     page.drawImage(img2, { x: COORDS.sig2.x, y: COORDS.sig2.y, width: COORDS.sig2.w, height: COORDS.sig2.h });
   }
 
-  if (STATE.vorstandConfirmed && STATE.sig3){
-    var aufnDate = fmtDate(STATE.aufnahmeDatum) || todayDE();
-    put(aufnDate, COORDS.aufnahme, 'aufnahme');
-    put(ortAusPLZ(d.plzort) + ', ' + aufnDate, COORDS.ort3, 'ort3');
-    rectDbg(COORDS.sig3, 'sig3');
-    var img3 = await pdfDoc.embedPng(STATE.sig3);
-    page.drawImage(img3, { x: COORDS.sig3.x, y: COORDS.sig3.y, width: COORDS.sig3.w, height: COORDS.sig3.h });
+  // Vorstand: immer vorab unterzeichnet (statische PNG im Repo).
+  // Falls die Datei mal nicht lädt, bleibt der Block leer — niemals fallback auf editierbares Canvas.
+  var aufnDate = todayDE();
+  put(aufnDate, COORDS.aufnahme, 'aufnahme');
+  put('Ochtrup, ' + aufnDate, COORDS.ort3, 'ort3');
+  rectDbg(COORDS.sig3, 'sig3');
+  var vorstandBytes = await loadVorstandSigBytes();
+  if (vorstandBytes){
+    try {
+      var img3 = await pdfDoc.embedPng(vorstandBytes);
+      page.drawImage(img3, { x: COORDS.sig3.x, y: COORDS.sig3.y, width: COORDS.sig3.w, height: COORDS.sig3.h });
+    } catch(e){ console.warn('Vorstands-Signatur-Embed fehlgeschlagen', e); }
   }
 
   var bytes = await pdfDoc.save();
@@ -986,7 +973,6 @@ function shareMail(){
 document.addEventListener('DOMContentLoaded', function(){
   initSigCanvas(document.getElementById('sig-1'));
   initSigCanvas(document.getElementById('sig-2'));
-  initSigCanvas(document.getElementById('sig-3'));
   renderTuner();
 
   applyInviteParams();
