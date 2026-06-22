@@ -194,31 +194,31 @@ header{position:relative}
 
     <label>
       <span class="lbl">Name, Vorname <span class="req">*</span></span>
-      <input type="text" id="f-name" autocomplete="name" required>
+      <input type="text" id="f-name" autocomplete="off" autocorrect="off" spellcheck="false" required>
       <div class="err-msg">Bitte Name und Vorname angeben</div>
     </label>
     <label>
       <span class="lbl">Straße, Nr. <span class="req">*</span></span>
-      <input type="text" id="f-str" autocomplete="street-address" required>
+      <input type="text" id="f-str" autocomplete="off" autocorrect="off" spellcheck="false" required>
       <div class="err-msg">Bitte Straße und Hausnummer angeben</div>
     </label>
     <label>
       <span class="lbl">PLZ, Ort <span class="req">*</span></span>
-      <input type="text" id="f-plzort" autocomplete="postal-code" required placeholder="48607 Ochtrup">
+      <input type="text" id="f-plzort" autocomplete="off" autocorrect="off" spellcheck="false" required placeholder="48607 Ochtrup">
       <div class="err-msg">Bitte PLZ und Ort angeben</div>
     </label>
     <label>
       <span class="lbl">Geburtsdatum <span class="req">*</span></span>
-      <input type="date" id="f-gebdat" autocomplete="bday" required>
+      <input type="date" id="f-gebdat" autocomplete="off" required>
       <div class="err-msg">Bitte Geburtsdatum angeben</div>
     </label>
     <label>
       <span class="lbl">Telefon</span>
-      <input type="tel" id="f-tel" autocomplete="tel" inputmode="tel">
+      <input type="tel" id="f-tel" autocomplete="off" inputmode="tel">
     </label>
     <label>
       <span class="lbl">E-Mail</span>
-      <input type="email" id="f-mail" autocomplete="email" inputmode="email">
+      <input type="email" id="f-mail" autocomplete="off" inputmode="email">
       <div class="err-msg">Bitte gültige E-Mail-Adresse</div>
     </label>
 
@@ -989,17 +989,28 @@ window.exportTuner = function(){
 };
 
 // --- Einladungs-Link: Query-Params + Generator ---
+function clearWizardFields(){
+  // Browser-Autofill aktiv überschreiben — die App soll bei jedem Aufruf leer starten.
+  ['f-name','f-str','f-plzort','f-gebdat','f-tel','f-mail'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
 function applyInviteParams(){
+  // Erst alles leeren (gegen Browser-Autofill), dann bei Bedarf Pre-Fill setzen.
+  clearWizardFields();
+
   var p = new URLSearchParams(window.location.search);
   var vor = (p.get('vorname') || '').trim();
   var nach = (p.get('nachname') || '').trim();
   var einl = (p.get('einlader') || '').trim();
 
-  // Pre-Fill „Name, Vorname" wenn übergeben
+  // Pre-Fill „Name, Vorname" wenn übergeben — überschreibt auch Autofill
   if (vor || nach){
     var combined = nach && vor ? (nach + ', ' + vor) : (nach || vor);
     var fName = document.getElementById('f-name');
-    if (fName && !fName.value) fName.value = combined;
+    if (fName) fName.value = combined;
   }
 
   // Einlader-Banner
@@ -1014,15 +1025,21 @@ function applyInviteParams(){
   if (p.get('gen') === '1'){
     startGenerator();
   } else if (vor || nach || einl){
+    HAS_PREFILL = true;
     startWizard();
   }
   // sonst bleibt sec-start sichtbar (HTML-Default)
 }
 
+// Markiert, ob beim App-Start Pre-Fill aus Query-Params angewendet wurde —
+// nur dann sollen die Felder NICHT erneut geleert werden.
+var HAS_PREFILL = false;
+
 function startWizard(){
   document.getElementById('sec-start').classList.add('hidden');
   document.getElementById('sec-gen').classList.add('hidden');
   document.getElementById('progress').classList.remove('hidden');
+  if (!HAS_PREFILL) clearWizardFields(); // gegen verzögertes Browser-Autofill
   showStep(1);
 }
 
