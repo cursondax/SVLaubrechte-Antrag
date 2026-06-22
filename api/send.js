@@ -66,11 +66,15 @@ export default async function handler(req, res) {
       recipients.push(mail);
     }
 
-    const html = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#222;line-height:1.5;max-width:600px">
-      <div style="background:#1e4d2b;color:#fff;padding:18px 20px;border-radius:8px 8px 0 0">
-        <h2 style="margin:0;font-size:1.2rem">Neue Beitrittserklärung — Schützenverein Lau-Brechte e.V.</h2>
-      </div>
-      <div style="background:#f7f7f4;padding:20px;border-radius:0 0 8px 8px">
+    const html = `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neue Beitrittserklärung</title></head><body style="margin:0;padding:0;background:#eceae3;font-family:Arial,Helvetica,sans-serif;color:#222;line-height:1.5">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:600px;width:100%;margin:0 auto;background:#fff;border-collapse:collapse">
+        <tr><td style="background:linear-gradient(135deg,#1e4d2b 0%,#143820 100%);background-color:#1e4d2b;padding:28px 20px 22px;text-align:center;color:#fff">
+          <img src="https://sv-laubrechte-antrag.vercel.app/logo-white.png" alt="Schützenverein Lau-Brechte e.V." width="110" style="display:block;margin:0 auto 12px;max-width:110px;height:auto;border:0;outline:none">
+          <div style="font-size:1.05rem;font-weight:700;letter-spacing:.6px;line-height:1.25">Schützenverein Lau-Brechte e.V.</div>
+          <div style="font-size:.78rem;letter-spacing:2px;opacity:.85;margin-top:4px;font-style:italic">seit 1645</div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.22);font-size:.95rem;font-weight:600">📋 Neue Beitrittserklärung</div>
+        </td></tr>
+        <tr><td style="background:#f7f7f4;padding:22px 24px">
         <p>Eine neue Beitrittserklärung wurde online eingereicht. Das ausgefüllte und unterschriebene PDF findet ihr im Anhang.</p>
         <h3 style="color:#1e4d2b;margin-top:24px;margin-bottom:8px;font-size:1rem">Eckdaten</h3>
         <table style="width:100%;border-collapse:collapse;font-size:.95rem">
@@ -83,7 +87,8 @@ export default async function handler(req, res) {
         </table>
         <p style="margin-top:20px;font-size:.9rem;background:#fff;padding:10px 12px;border-left:3px solid #5a8c3e;color:#444"><strong>Tipp:</strong> Die mitgeschickte Datei <code>${esc(jsonFilename)}</code> kann direkt in der Mitgliederverwaltung über &bdquo;Antrag importieren&ldquo; geladen werden — dann wird der Interessent als neuer Eintrag (Bezirk noch offen) angelegt.</p>
         <p style="margin-top:20px;font-size:.85rem;color:#888">— Automatisch generiert vom Online-Antrag unter <a href="https://sv-laubrechte-antrag.vercel.app/" style="color:#1e4d2b">sv-laubrechte-antrag.vercel.app</a></p>
-      </div>
+        </td></tr>
+      </table>
     </body></html>`;
 
     const result = await resend.emails.send({
