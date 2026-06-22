@@ -69,10 +69,9 @@ export default async function handler(req, res) {
     const html = `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neue Beitrittserklärung</title></head><body style="margin:0;padding:0;background:#eceae3;font-family:Arial,Helvetica,sans-serif;color:#222;line-height:1.5">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:600px;width:100%;margin:0 auto;background:#fff;border-collapse:collapse">
         <tr><td style="background:linear-gradient(135deg,#1e4d2b 0%,#143820 100%);background-color:#1e4d2b;padding:28px 20px 22px;text-align:center;color:#fff">
-          <img src="https://sv-laubrechte-antrag.vercel.app/logo-white.png" alt="Schützenverein Lau-Brechte e.V." width="110" style="display:block;margin:0 auto 12px;max-width:110px;height:auto;border:0;outline:none">
-          <div style="font-size:1.05rem;font-weight:700;letter-spacing:.6px;line-height:1.25">Schützenverein Lau-Brechte e.V.</div>
-          <div style="font-size:.78rem;letter-spacing:2px;opacity:.85;margin-top:4px;font-style:italic">seit 1645</div>
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.22);font-size:.95rem;font-weight:600">📋 Neue Beitrittserklärung</div>
+          <img src="https://sv-laubrechte-antrag.vercel.app/logo-white.png" alt="Schützenverein Lau-Brechte e.V." width="140" style="display:block;margin:0 auto 8px;max-width:140px;height:auto;border:0;outline:none">
+          <div style="font-size:.8rem;letter-spacing:2px;opacity:.85;margin-top:2px;font-style:italic">seit 1645</div>
+          <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.22);font-size:.98rem;font-weight:600">📋 Neue Beitrittserklärung</div>
         </td></tr>
         <tr><td style="background:#f7f7f4;padding:22px 24px">
         <p>Eine neue Beitrittserklärung wurde online eingereicht. Das ausgefüllte und unterschriebene PDF findet ihr im Anhang.</p>
