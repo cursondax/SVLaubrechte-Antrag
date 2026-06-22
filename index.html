@@ -89,6 +89,47 @@ footer a{color:#1e4d2b;text-decoration:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .inviter-banner{background:#e8f5e0;border:1px solid #5a8c3e;color:#1e4d2b;padding:10px 14px;border-radius:8px;margin:14px 0 0;font-size:.88rem;text-align:center}
 .inviter-banner strong{color:#1e4d2b}
+.start-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:6px}
+@media(min-width:560px){.start-grid{grid-template-columns:1fr 1fr}}
+.start-card{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px 18px;background:#f7faf3;border:2px solid #d4e0c8;border-radius:14px;color:#1e4d2b;cursor:pointer;font-family:inherit;transition:transform .1s,border-color .15s,background .15s}
+.start-card:hover{border-color:#5a8c3e;background:#eef5e6}
+.start-card:active{transform:scale(.98)}
+.start-card .ico{font-size:2rem;line-height:1}
+.start-card .ttl{font-size:1.02rem;font-weight:700}
+.start-card .sub{font-size:.82rem;color:#516a4a;font-weight:400;line-height:1.4}
+.hdr-invite-btn{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:8px 14px;font-size:.82rem;font-weight:600;font-family:inherit;cursor:pointer;backdrop-filter:blur(4px);transition:background .15s,transform .1s}
+.hdr-invite-btn:hover{background:rgba(255,255,255,.28)}
+.hdr-invite-btn:active{transform:scale(.96)}
+header{position:relative}
+.modal-bg{position:fixed;inset:0;background:rgba(20,40,28,.55);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:520px;width:100%;box-shadow:0 14px 48px rgba(0,0,0,.25);overflow:hidden;margin:auto}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ececea;background:#f8f8f5}
+.modal-hd h3{margin:0;font-size:1.05rem;color:#1e4d2b}
+.modal-close{background:none;border:none;font-size:1.3rem;color:#999;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:#ececea;color:#333}
+.modal-bd{padding:18px 20px}
+.modal-bd p.intro{margin:0 0 14px;font-size:.88rem;color:#555;line-height:1.5}
+.modal-bd label{display:block;margin-bottom:10px}
+.modal-bd .lbl{display:block;margin-bottom:4px;font-size:.85rem;color:#444;font-weight:600}
+.modal-bd input[type="text"]{width:100%;padding:10px 12px;border:1.5px solid #d4d4cf;border-radius:8px;font-size:.95rem;font-family:inherit;box-sizing:border-box}
+.modal-bd input[type="text"]:focus{outline:none;border-color:#1e4d2b}
+.modal-ft{padding:12px 20px;border-top:1px solid #ececea;background:#f8f8f5;display:flex;justify-content:flex-end}
+.modal .gen-url{background:#f4f4f1;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;color:#333}
+.modal .gen-status{margin-top:8px;font-size:.82rem;color:#5a8c3e;min-height:1.2em}
+.modal .actions-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.modal .actions-grid .btn{padding:10px 8px;font-size:.85rem;flex:initial}
+@media (max-width:520px){.modal .actions-grid{grid-template-columns:1fr;gap:6px}}
+@media (prefers-color-scheme:dark){
+  .modal{background:#2a2a26}
+  .modal-hd,.modal-ft{background:#222220;border-color:#3a3a35}
+  .modal-hd h3{color:#a8d18a}
+  .modal-bd p.intro,.modal-bd .lbl{color:#cfcfcb}
+  .modal-bd input[type="text"]{background:#1f1f1d;color:#eee;border-color:#3a3a35}
+  .modal .gen-url{background:#1f1f1d;color:#eee}
+  .modal-close{color:#bbb}
+  .modal-close:hover{background:#3a3a35;color:#fff}
+}
 .gen-url{width:100%;padding:10px 12px;border:1.5px solid #d4d4cf;border-radius:8px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;background:#f9f9f7;color:#222;word-break:break-all}
 .gen-status{font-size:.85rem;color:#5a8c3e;font-weight:600;text-align:center;margin-top:10px;min-height:1.2em}
 @media (prefers-color-scheme: dark){
@@ -110,6 +151,7 @@ footer a{color:#1e4d2b;text-decoration:none}
 </head>
 <body>
 <header>
+  <button class="hdr-invite-btn" onclick="openInviteModal()" title="Antragslink für Interessenten erstellen">&#128231; Einladen</button>
   <img src="logo-white.png" alt="Schützenverein Lau-Brechte e.V." class="logo">
   <h1>Beitrittserklärung</h1>
   <div class="sub">Online-Mitgliedsantrag</div>
@@ -119,7 +161,7 @@ footer a{color:#1e4d2b;text-decoration:none}
   <div class="inviter-banner hidden" id="inviter-banner">
     Eingeladen von <strong id="inviter-name"></strong> — willkommen bei den Lau-Brechte-Schützen!
   </div>
-  <div class="progress" id="progress">
+  <div class="progress hidden" id="progress">
     <span class="step active" data-step="1"></span>
     <span class="step" data-step="2"></span>
     <span class="step" data-step="3"></span>
@@ -127,8 +169,26 @@ footer a{color:#1e4d2b;text-decoration:none}
     <span class="step" data-step="5"></span>
   </div>
 
+  <!-- STARTSCHIRM: Wahl zwischen Direkt-Ausfüllen oder Einladen -->
+  <section class="section" id="sec-start">
+    <h2>Was möchtest du tun?</h2>
+    <p class="helper">Du kannst den Antrag direkt am Handy ausfüllen — oder einem Interessenten einen personalisierten Link schicken, damit er sich selbst eintragen kann.</p>
+    <div class="start-grid">
+      <button class="start-card" onclick="startWizard()">
+        <span class="ico">📝</span>
+        <span class="ttl">Antrag jetzt ausfüllen</span>
+        <span class="sub">Daten eintragen, am Handy unterschreiben, fertig.</span>
+      </button>
+      <button class="start-card" onclick="startGenerator()">
+        <span class="ico">📧</span>
+        <span class="ttl">Einladung verschicken</span>
+        <span class="sub">Personalisierten Antragslink per WhatsApp oder E-Mail teilen.</span>
+      </button>
+    </div>
+  </section>
+
   <!-- SCHRITT 1: Persönliche Daten -->
-  <section class="section" id="sec-1">
+  <section class="section hidden" id="sec-1">
     <h2>Persönliche Daten</h2>
     <p class="helper">Bitte fülle alle Felder aus.</p>
 
@@ -313,6 +373,49 @@ footer a{color:#1e4d2b;text-decoration:none}
   Schützenverein Lau-Brechte e.V. &middot; Ochtrup<br>
   <a href="mailto:info@schuetzenverein-lau-brechte.de">info@schuetzenverein-lau-brechte.de</a>
 </footer>
+
+<!-- INVITE MODAL: Antragslink für Interessenten generieren -->
+<div class="modal-bg" id="inviteModal" onclick="if(event.target===this)closeInviteModal()">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>&#128231; Einladungs-Link erstellen</h3>
+      <button class="modal-close" onclick="closeInviteModal()" aria-label="Schließen">&times;</button>
+    </div>
+    <div class="modal-bd">
+      <p class="intro">Erzeuge einen personalisierten Antragslink für einen Interessenten und verschicke ihn per WhatsApp oder E-Mail. Der Empfänger füllt den Antrag direkt am Handy aus und unterschreibt mit dem Finger.</p>
+      <label>
+        <span class="lbl">Vorname des Interessenten</span>
+        <input type="text" id="m-vor" placeholder="z.B. Max" autocomplete="off">
+      </label>
+      <label>
+        <span class="lbl">Nachname</span>
+        <input type="text" id="m-nach" placeholder="z.B. Mustermann" autocomplete="off">
+      </label>
+      <label>
+        <span class="lbl">Dein Name <span class="req">*</span></span>
+        <input type="text" id="m-einl" placeholder="z.B. Bert Steven" autocomplete="name">
+      </label>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" style="width:100%" onclick="generateInviteModal()">Link erstellen</button>
+      </div>
+      <div id="m-result" class="hidden" style="margin-top:18px;padding-top:14px;border-top:1px solid #ececea">
+        <label>
+          <span class="lbl">Personalisierter Link</span>
+          <input type="text" id="m-url" readonly class="gen-url">
+        </label>
+        <div class="actions-grid">
+          <button class="btn btn-secondary" onclick="copyInviteUrlModal()">&#128203; Kopieren</button>
+          <button class="btn btn-success" onclick="shareWhatsAppModal()">&#128172; WhatsApp</button>
+          <button class="btn btn-primary" onclick="shareMailModal()">&#128231; E-Mail</button>
+        </div>
+        <div class="gen-status" id="m-status"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeInviteModal()">Schließen</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -903,20 +1006,37 @@ function applyInviteParams(){
     if (b && n){ n.textContent = einl; b.classList.remove('hidden'); }
   }
 
-  // Generator-Modus per ?gen=1 — Wizard ausblenden, Generator zeigen
+  // Routing: Empfänger einer Einladung → direkt in den Wizard;
+  //          ?gen=1 → direkt in den Generator; sonst Startschirm zeigen.
   if (p.get('gen') === '1'){
-    document.getElementById('progress').classList.add('hidden');
-    for (var i=1;i<=5;i++){
-      var s = document.getElementById('sec-'+i);
-      if (s) s.classList.add('hidden');
-    }
-    document.getElementById('sec-gen').classList.remove('hidden');
-    // Vorname Einlader aus localStorage vorbelegen
-    try {
-      var saved = localStorage.getItem('svlb_inviter');
-      if (saved) document.getElementById('g-einl').value = saved;
-    } catch(e){}
+    startGenerator();
+  } else if (vor || nach || einl){
+    startWizard();
   }
+  // sonst bleibt sec-start sichtbar (HTML-Default)
+}
+
+function startWizard(){
+  document.getElementById('sec-start').classList.add('hidden');
+  document.getElementById('sec-gen').classList.add('hidden');
+  document.getElementById('progress').classList.remove('hidden');
+  showStep(1);
+}
+
+function startGenerator(){
+  document.getElementById('sec-start').classList.add('hidden');
+  document.getElementById('progress').classList.add('hidden');
+  for (var i=1;i<=5;i++){
+    var s = document.getElementById('sec-'+i);
+    if (s) s.classList.add('hidden');
+  }
+  document.getElementById('sec-gen').classList.remove('hidden');
+  // Einlader-Name aus localStorage vorbelegen
+  try {
+    var saved = localStorage.getItem('svlb_inviter');
+    var el = document.getElementById('g-einl');
+    if (saved && el && !el.value) el.value = saved;
+  } catch(e){}
 }
 
 function generateInvite(){
