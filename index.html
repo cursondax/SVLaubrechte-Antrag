@@ -898,7 +898,10 @@ async function sendByApi(){
       gebdat: fmtDate(STATE.data.gebdat),
       tel: STATE.data.tel,
       mail: STATE.data.mail,
-      copyToApplicant: copy
+      copyToApplicant: copy,
+      photoConsent: STATE.photoConsent,
+      vorstandConfirmed: !!STATE.vorstandConfirmed,
+      aufnahmeDatum: STATE.vorstandConfirmed ? fmtDate(STATE.aufnahmeDatum) : ''
     };
 
     var res = await fetch('/api/send', {

@@ -1,5 +1,7 @@
-// Vercel Serverless Function — sendet Beitrittserklärung als E-Mail mit PDF-Anhang
-// Erwartet POST mit { pdfBase64, name, str, plzort, gebdat, tel, mail, copyToApplicant }
+// Vercel Serverless Function — sendet Beitrittserklärung als E-Mail mit PDF- und JSON-Anhang
+// Erwartet POST mit { pdfBase64, name, str, plzort, gebdat, tel, mail, copyToApplicant,
+//                     vorstandConfirmed, aufnahmeDatum, photoConsent }
+// Die JSON-Datei kann der Vorstand in die Mitgliederverwaltung importieren.
 import { Resend } from 'resend';
 
 const VEREIN_MAIL = 'info@schuetzenverein-lau-brechte.de';
@@ -26,7 +28,10 @@ export default async function handler(req, res) {
   }
   if (!body || typeof body !== 'object') return res.status(400).json({ error: 'Body fehlt' });
 
-  const { pdfBase64, name, str, plzort, gebdat, tel, mail, copyToApplicant } = body;
+  const {
+    pdfBase64, name, str, plzort, gebdat, tel, mail, copyToApplicant,
+    vorstandConfirmed, aufnahmeDatum, photoConsent
+  } = body;
   if (!pdfBase64 || !name) return res.status(400).json({ error: 'PDF und Name sind Pflicht' });
 
   // PDF-Größe begrenzen (Schutz vor riesigen Uploads)
@@ -37,6 +42,24 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(pdfBase64, 'base64');
     const cleanName = String(name).replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g, '').replace(/\s+/g, '_');
     const filename = `Beitrittserklaerung_${cleanName || 'Antrag'}.pdf`;
+
+    // JSON mit Rohdaten — für Import in die Mitgliederverwaltung.
+    const antragData = {
+      type: 'svlb-antrag',
+      version: 1,
+      submittedAt: new Date().toISOString(),
+      name: name || '',
+      str: str || '',
+      plzort: plzort || '',
+      gebdat: gebdat || '',
+      tel: tel || '',
+      mail: mail || '',
+      photoConsent: photoConsent || null,
+      vorstandConfirmed: !!vorstandConfirmed,
+      aufnahmeDatum: aufnahmeDatum || ''
+    };
+    const jsonFilename = `antrag_${cleanName || 'Antrag'}.json`;
+    const jsonBuffer = Buffer.from(JSON.stringify(antragData, null, 2), 'utf-8');
 
     const recipients = [VEREIN_MAIL];
     if (copyToApplicant && mail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
@@ -58,6 +81,7 @@ export default async function handler(req, res) {
           ${tel ? `<tr><td style="padding:6px 0;color:#666">Telefon</td><td style="padding:6px 0">${esc(tel)}</td></tr>` : ''}
           ${mail ? `<tr><td style="padding:6px 0;color:#666">E-Mail</td><td style="padding:6px 0">${esc(mail)}</td></tr>` : ''}
         </table>
+        <p style="margin-top:20px;font-size:.9rem;background:#fff;padding:10px 12px;border-left:3px solid #5a8c3e;color:#444"><strong>Tipp:</strong> Die mitgeschickte Datei <code>${esc(jsonFilename)}</code> kann direkt in der Mitgliederverwaltung über &bdquo;Antrag importieren&ldquo; geladen werden — dann wird der Interessent als neuer Eintrag (Bezirk noch offen) angelegt.</p>
         <p style="margin-top:20px;font-size:.85rem;color:#888">— Automatisch generiert vom Online-Antrag unter <a href="https://sv-laubrechte-antrag.vercel.app/" style="color:#1e4d2b">sv-laubrechte-antrag.vercel.app</a></p>
       </div>
     </body></html>`;
@@ -67,7 +91,10 @@ export default async function handler(req, res) {
       to: recipients,
       subject: `Neue Beitrittserklärung — ${name}`,
       html,
-      attachments: [{ filename, content: buffer }]
+      attachments: [
+        { filename, content: buffer },
+        { filename: jsonFilename, content: jsonBuffer }
+      ]
     });
 
     if (result.error) {
