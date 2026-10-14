@@ -35,3 +35,10 @@ A4 = 595×842 pt, Origin unten-links.
 ## Verein
 
 Schützenverein Lau-Brechte e.V., Ochtrup · seit 1645
+
+## PADD-Modus (Aufruf über die Enterprise)
+
+`padd.js` zeigt die App im Tablet-Gehäuse der USS Enterprise, aber nur beim Aufruf mit `?padd=1`
+(so öffnet sie die Enterprise-App unter https://ncc1701d.vercel.app). Ein normaler Aufruf bleibt
+unverändert. Die App läuft dabei in einem Rahmen von derselben Adresse und nutzt deshalb dieselben
+Daten und dieselbe Anmeldung. Die Datei ist in allen Apps identisch; Änderungen überall gleich übernehmen.
