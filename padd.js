@@ -171,9 +171,18 @@
     }
     document.getElementById("paddBack").addEventListener("click", function () {
       try { if (isFull() && exit) exit.call(document); } catch (e) {}
-      // In einem eigenen Tab geoeffnet: Tab schliessen; sonst zur Enterprise wechseln
-      try { window.close(); } catch (e) {}
-      setTimeout(function () { location.href = ENTERPRISE; }, 250);
+      // Nur schliessen, wenn die Enterprise dieses Fenster selbst geoeffnet hat (dann liegt
+      // sie direkt dahinter). Kam der Aufruf ueber "x-safari-https" (iPad, Homescreen-App),
+      // gibt es kein opener: Schliessen landete sonst im zuletzt offenen Safari-Tab (z. B.
+      // Vercel). Dann in diesem Tab zur Enterprise wechseln.
+      var opener = null;
+      try { opener = window.opener; } catch (e) {}
+      if (opener && !opener.closed) {
+        try { window.close(); } catch (e) {}
+        setTimeout(function () { location.href = ENTERPRISE; }, 250);
+      } else {
+        location.href = ENTERPRISE;
+      }
     });
   }
   if (document.documentElement) build();
