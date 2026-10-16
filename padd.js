@@ -20,8 +20,17 @@
   if (params.get("padd") !== "1") return;
   try { if (window.top !== window.self) return; } catch (e) { return; }
 
+  // Aus der Homescreen-App der Enterprise geoeffnet (von=pwa)? Dann liegt die App in
+  // der eingeblendeten Safari-Ansicht ueber der Enterprise, und "Enterprise" schliesst sie.
+  var vonPwa = params.get("von") === "pwa";
+  try {
+    if (vonPwa) sessionStorage.setItem("paddVonPwa", "1");
+    else vonPwa = sessionStorage.getItem("paddVonPwa") === "1";
+  } catch (e) {}
+
   // Adresse der App ohne den PADD-Schalter
   params.delete("padd");
+  params.delete("von");
   var qs = params.toString();
   var inner = location.pathname + (qs ? "?" + qs : "") + location.hash;
   try { history.replaceState(null, "", location.pathname + "?padd=1" + (qs ? "&" + qs : "") + location.hash); } catch (e) {}
@@ -175,6 +184,14 @@
       // sie direkt dahinter). Kam der Aufruf ueber "x-safari-https" (iPad, Homescreen-App),
       // gibt es kein opener: Schliessen landete sonst im zuletzt offenen Safari-Tab (z. B.
       // Vercel). Dann in diesem Tab zur Enterprise wechseln.
+      if (vonPwa) {
+        // Eingeblendete Safari-Ansicht: schliessen, die Enterprise liegt darunter. Laesst
+        // iPadOS das Schliessen nicht zu, sagen, wo der Knopf dafuer sitzt (kein Wechsel
+        // zur Enterprise hier drin, sonst laeuft sie doppelt).
+        try { window.close(); } catch (e) {}
+        setTimeout(function () { say("Zurück zur Enterprise: oben links auf „Fertig“ tippen."); }, 400);
+        return;
+      }
       var opener = null;
       try { opener = window.opener; } catch (e) {}
       if (opener && !opener.closed) {
