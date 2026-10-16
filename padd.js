@@ -181,7 +181,7 @@
         try { window.close(); } catch (e) {}
         setTimeout(function () { location.href = ENTERPRISE; }, 250);
       } else {
-        location.href = ENTERPRISE;
+        location.href = ENTERPRISE + "?zurueck=1";   // direkt zur Hauptseite, ohne Intro
       }
     });
   }
